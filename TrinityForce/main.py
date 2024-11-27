@@ -13,9 +13,6 @@ pygame.display.set_caption('TrinityForce')
 
 BG = pygame.transform.scale(pygame.image.load('TrinityForce_background.jpg'), (WIDTH, HEIGHT))
 
-
-
-
 def drwa_hexsagon_n(hex_size):
 	radius = 90
 	a = radius
