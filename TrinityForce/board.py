@@ -1,4 +1,4 @@
-size = 5
+size = 4
 
 
 def validateMove(move, board):
@@ -34,7 +34,7 @@ def validateMove(move, board):
                     valid = False
                 column += 1
         if valid:
-            print(f"Potez {direction} sa ({row_char}, {column}) je validan.")
+            print(f"Potez {direction} sa ({row_char}, {column_char}) je validan.")
             return True
         else:
             print(f"Potez {direction} nije validan.")
@@ -50,16 +50,18 @@ def validateMove(move, board):
                     valid = False
                 column -= 1
         if valid:
-            print(f"Potez {direction} sa ({row_char}, {column}) je validan.")
+            print(f"Potez {direction} sa ({row_char}, {column_char}) je validan.")
             return True
         else:
             print(f"Potez {direction} nije validan.")
             return False
 
     elif direction == "D":
-        if column - 1 + 3 < len(board[row]):
-            print(f"Potez {direction} sa ({row_char}, {column}) je validan.")
+        if column + 3 < len(board[row]):
+            print(f"Potez {direction} sa ({row_char}, {column_char}) je validan.")
             return True
+        else:
+            print(f"Potez {direction} nije validan.")
     else:
             print(f"Potez {direction} nije validan.")
             return False
