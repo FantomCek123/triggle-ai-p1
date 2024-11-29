@@ -1,4 +1,5 @@
-size = 5
+size = 4
+
 
 
 def validateMove(move, board):
@@ -23,6 +24,7 @@ def validateMove(move, board):
 
     # moze se malo refaktorisati da bude bolje i citljivije, kod granicnih slucajeva pogotovo i da izadje odma kad 
     # nadje da nije validan al me jako mrzi, ipak su u pitanju 4 iteracije...
+
     if direction == "DD":
         valid = True
         for i in range(3):
