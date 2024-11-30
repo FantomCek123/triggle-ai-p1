@@ -94,7 +94,7 @@ def filter_moves_with_max_x3(moves):
     max_moves = {}
 
     for move in moves:
-        key = (move[0].upper(a), move[1], move[2])
+        key = (move[0].upper(), move[1], move[2])
         if key not in max_moves or move[3] > max_moves[key][3]:
             max_moves[key] = move
     return list(max_moves.values())
@@ -146,6 +146,7 @@ def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center):
         dd_dl_moves.pop(index)
     return dd_dl_moves
 
+# postoji mali bug... prepraviti
 def printDMoves(moves, dot_number, row, shift):
     beg = f"{chr(row + 65)}{tab}"
     to_print = f"{chr(row + 65)}{tab}"
