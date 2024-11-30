@@ -107,7 +107,13 @@ def filter_moves_with_max_x3(moves):
 			max_moves[key] = move
 	return list(max_moves.values())
 
-def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center):
+def triangle_under_column_occupied(triangles , column):
+	for triangle in triangles:
+		if triangle[2] == column:
+			return triangle
+	return None
+
+def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center, occupied_triangles):
 	to_print = ""  # zbog slova...
 	flagged = []
 	dd_dl_moves = filter_moves_with_max_x3(dd_dl_moves)
@@ -120,7 +126,10 @@ def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center):
 				new = f" {tab * (shift + 1 + 2 * (move[1] - 1))}"
 				if move[1] > 1: new += f"{(move[1] - 1) * " "}"
 				to_print = to_print + new[len(to_print):]
-			to_print += "  \\"
+			if triangle_under_column_occupied(occupied_triangles, move[1] - 1) is None:
+				to_print += half_tab + '\\'
+			else:
+				to_print += " " + '\\'
 			move[3] -= 1
 			if move[3] == 0:
 				flagged.append(index)  # dd_dl_moves.pop(index)
@@ -139,6 +148,10 @@ def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center):
 				if move[1] > 1: new += f"{(move[1] - 1) * " "}"
 				to_print = to_print + new[len(to_print):]
 			to_print += half_tab + '/'
+			x_or_o = triangle_under_column_occupied(occupied_triangles, move[1] - 1)
+			if x_or_o is not None:
+				to_print += ' ' + x_or_o[0]
+
 			move[3] -= 1
 			if move[3] == 0:
 				flagged.append(index)  # dd_dl_moves.pop(index) #ovde ga sjebe dal zbog enumerate bem li ga
@@ -154,7 +167,6 @@ def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center):
 	return dd_dl_moves
 
 
-# postoji mali bug... prepraviti
 def printDMoves(moves, dot_number, row, shift):
 	beg = f"{chr(row + 65)}{tab}"
 	to_print = f"{chr(row + 65)}{tab}"
@@ -178,20 +190,13 @@ def printDMoves(moves, dot_number, row, shift):
 				new += "." + 2 * tab
 				to_print = to_print + new[len(to_print):]
 
-		# promeniti, ne bi trebalo vise od 2 ista da ima...
-		# for flag in sorted(flagged, reverse=True):
-		#	moves.pop(flag)
-		# if len(moves) == 0:
-		# 	to_print += '.'
-		# 	break
 		moves = deleteDuplicates(moves)
 	print(to_print)
 	return
 
 
-def printBoard(board, size, moves):
+def printBoard(board, size, moves, occupied_triangles):
 	center = size - 1
-	# ovo treba dodraditi da printa / i - prilikom dodavanja poteza
 	for i, cells in enumerate(board):
 		if i < center:
 			shift = size - 1 - i
@@ -209,8 +214,8 @@ def printBoard(board, size, moves):
 		                 ord(move[0].upper()) - 65 == i and (move[2].upper() == "DD" or move[2].upper() == "DL")]
 		remaining_moves = [item for item in moves if item not in dd_dl_for_row]
 		dd_dl_for_row.sort(key=lambda x: (x[1], 0 if x[2].upper() == "DL" else 1))
-
-		moves = printDLAndDDMovesAndUpdateMoveList(dd_dl_for_row, i, shift, center) + remaining_moves
+		triangles_for_row = [sublist for sublist in occupied_triangles if sublist[1] == i]
+		moves = printDLAndDDMovesAndUpdateMoveList(dd_dl_for_row, i, shift, center, triangles_for_row) + remaining_moves
 
 
 def makeBoard(size: int):
@@ -227,9 +232,6 @@ def makeBoard(size: int):
 		print('Losa velicina tabele! - postavi velicinu od 4 do 8!')
 		return
 
-
-## RADI SAMO KAD JE board_size = 4 ISPRAVITI
-
 if __name__ == "__main__":
 	board_size = input("Unesite velicinu table (od 4 do 8):")
 
@@ -237,7 +239,19 @@ if __name__ == "__main__":
 
 	moves = []
 	old_moves = []
-	printBoard(tabla, int(board_size), moves)
+	prepared_moves = [['a', 2 ,'dl', 3], ['a', 2 ,'dd', 3], ['b', 1 ,'d',3], ['a', 3 ,'dl', 3], ['a', 3 ,'dd', 3] ]
+	# Ovaj niz (matrica, trebalo bi da je set najbolje ali neka za pocetak) odnosi se na zauzete trouglove.
+	# Uzima vrednost koju ce iscrta, vrstu i kolonu - tj. vrsta sa tacke "iscrtava" x i o ispod nje zato sto se x i o nalaze tacno ispod tacaka
+	# a u fju za iscrtavanje veza poravnjavamo se po tacke iznad te vrste - mnogo logicno. Zato je ovako najlakse da se iscrtaju tacke
+	# Za ovaj niz trouglova treba da se napravi fja koja gleda koga ima vise i ko je pobednik.
+	# Za prvu fazu generisemo niz X i O staticki, a kasnije ce da generisemo ovaj set dinamicki kroz poteze.
+	# Ostalo je da se realizuju ove fje pomenute i ona sto racuna broj trouglica na osnovu velicine table, i mozda jos nesto ne secam se.
+	# Mozda optimizovati crtanje ali nema potrebe realno mali nizovi, brzo pici, jedino ako se neko iskurci bas...
+	# ps. - napraviti lepsi primer neki ovo ono...
+	occupied_triangles = [['x', 0, 1], ['o', 0, 2]] # <-
+	printBoard(tabla, int(board_size), prepared_moves, occupied_triangles)
+	printBoard(tabla, int(board_size), moves, [])
+
 	size = int(board_size) # za sad, refaktorisati kasnije
 	while True:
 		moves = copy.deepcopy(old_moves)
@@ -254,4 +268,4 @@ if __name__ == "__main__":
 
 			old_moves = copy.deepcopy(moves)
 			os.system('cls' if os.name == 'nt' else 'clear')
-			printBoard(tabla, int(board_size), moves)
+			printBoard(tabla, int(board_size), moves, [])
