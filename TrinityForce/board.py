@@ -163,7 +163,7 @@ def printDMoves(moves, dot_number, row, shift):
 	# f"{chr(i + 65)}{tab}" + f"{tab}" * shift + f"{2 * tab}"
 	for dot in range(dot_number):
 		for index, move in enumerate(moves):
-			if move[1] == dot + 1:
+			if move[1] == dot + 1 and index not in flagged:
 				new = beg + shift * tab + dot * 2 * tab
 				if move[1] > 1: new += f"{(move[1] - 1) * " "}"
 				new += "." + d_bond
@@ -174,16 +174,16 @@ def printDMoves(moves, dot_number, row, shift):
 					flagged.append(index)
 			else:
 				new = beg + shift * tab + dot * 2 * tab
-				if move[1] > 1: new += f"{(move[1] - 1) * " "}"
+				if dot > 0: new += f"{dot * " "}"
 				new += "." + 2 * tab
 				to_print = to_print + new[len(to_print):]
 
 		# promeniti, ne bi trebalo vise od 2 ista da ima...
-		for flag in sorted(flagged, reverse=True):
-			moves.pop(flag)
-		if len(moves) == 0:
-			to_print += '.'
-			break
+		# for flag in sorted(flagged, reverse=True):
+		#	moves.pop(flag)
+		# if len(moves) == 0:
+		# 	to_print += '.'
+		# 	break
 		moves = deleteDuplicates(moves)
 	print(to_print)
 	return
@@ -238,6 +238,7 @@ if __name__ == "__main__":
 	moves = []
 	old_moves = []
 	printBoard(tabla, int(board_size), moves)
+	size = int(board_size) # za sad, refaktorisati kasnije
 	while True:
 		moves = copy.deepcopy(old_moves)
 		user_input = input("Unesite podatke (format: red(A, B, ...) kolona(1, 2, ...) potez(DD,D,DL)): ")
@@ -253,4 +254,4 @@ if __name__ == "__main__":
 
 			old_moves = copy.deepcopy(moves)
 			os.system('cls' if os.name == 'nt' else 'clear')
-			printBoard(tabla, size, moves)
+			printBoard(tabla, int(board_size), moves)
