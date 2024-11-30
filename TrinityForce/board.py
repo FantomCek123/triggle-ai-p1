@@ -7,7 +7,7 @@ half_tab = '  '
 d_bond = '--------'
 
 
-def validateMove(move, board):
+def validateMove(move, board, moves):
 	if len(move) != 3:
 		print("Nevalidan potez: Nepotpun unos!")
 		return False
@@ -25,6 +25,14 @@ def validateMove(move, board):
 
 	if row < 0 or row >= len(board) or column < 0 or column >= len(board[row]):
 		print("Nevalidan potez: Pocetna pozicija je izvan granica table!")
+		return False
+
+	appanded_move = copy.deepcopy(move)
+	appanded_move[1] = int(appanded_move[1])
+	appanded_move.append(3)
+
+	if appanded_move in moves:
+		print("Ovaj potez je vec odigran!")
 		return False
 
 	# moze se malo refaktorisati da bude bolje i citljivije, kod granicnih slucajeva pogotovo i da izadje odma kad
@@ -237,7 +245,7 @@ if __name__ == "__main__":
 		parts = user_input.split()
 
 		move = [parts[0], parts[1], parts[2]]
-		if validateMove(move, tabla):
+		if validateMove(move, tabla, moves):
 			to_draw = 3
 			move[1] = int(move[1])
 			move.append(to_draw)
