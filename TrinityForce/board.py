@@ -1,6 +1,7 @@
 import copy
 import os
 
+
 size = 4
 tab = '    '
 half_tab = '  '
@@ -300,13 +301,14 @@ def links_for_move(letter, number, direction, size):
 				return lista
 
 		for i in range(3 - broj):
-			lista.append(((letter, number - i),(chr(ord(letter) + 1), number - i - 1)))
+			lista.append(((letter, number - i), (chr(ord(letter) + 1), number - i - 1)))
 			letter = chr(ord(letter) + 1)
 
 		return lista
 
 
 def end_game_screen(occupied_triangles):
+	os.system('cls' if os.name == 'nt' else 'clear')
 	count_x = 0
 	count_o = 0
 
@@ -321,7 +323,7 @@ def end_game_screen(occupied_triangles):
 	if count_x < count_o:
 		print(f"O IGRAC JE POBEDIO SA {count_o} BODOVA!!\n\nX igrac  je osvojio {count_x} bodova")
 	if count_x == count_o:
-		print(f"NERESENO")
+		print(f"NERESENO OBA IGRACA IMAJU {count_x} BODOVA!")
 
 
 def make_a_move():
@@ -329,7 +331,6 @@ def make_a_move():
 
 
 def start_game():
-
 	char_board_size = None
 	while True:
 		char_board_size = input("Unesite velicinu table (od 4 do 8):")
@@ -349,7 +350,9 @@ def start_game():
 	tabla, moves, old_moves, occupied_triangles, links = initial_state(board_size)
 
 	printBoard(tabla)
-	arbitrary_state(board_size)
+
+	#UKLJUCITE OVU LINIJU ZA PROIZVOLJNO STANJE
+	#arbitrary_state(board_size)
 
 	while True:
 		moves = copy.deepcopy(old_moves)
@@ -370,10 +373,10 @@ def start_game():
 			printBoard(tabla, moves, occupied_triangles)
 
 			# OVO JE ZA TEST SAMO
-			print()
-			for el in links:
-				print(el)
-			print()
+			#print()
+			#for el in links:
+			#	print(el)
+			#print()
 
 			if end_check(occupied_triangles, board_size):
 				print("Kraj igre!")
