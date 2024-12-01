@@ -1,0 +1,60 @@
+1. start_game
+Ova funkcija je odgovorna za pokretanje i upravljanje celokupnom igrom.
+
+Unos veličine table: Korisnik unosi veličinu table (između 4 i 8). Funkcija proverava da li je unos validan, 
+tj. da li je broj u tom opsegu.
+
+Unos ko igra prvi: Korisnik bira da li će prvi igrati "X" ili "O". Unos se proverava da bude validan.
+
+Inicijalizacija stanja igre: Funkcija poziva initial_state kako bi inicijalizovala tablu i druge varijable 
+kao što su moves (potezi), i occupied_triangles (zauzeti trouglovi).
+
+Glavna petlja igre: Igra ulazi u glavnu petlju, gde:
+
+Uzimaju se korisnički unosi za poteze (u formatu: red kolona pravac).
+Unos se validira pomoću funkcije validateMove().
+Ažurira se stanje igre (potezi i linkovi), i tabla se ponovo crta.
+Proverava se da li je igra gotova pozivom funkcije end_check(). Ako je igra završena, koristi se end_game_screen() 
+da prikaže konačni rezultat i izlazi iz petlje.
+
+2. end_game_screen
+Ova funkcija se poziva kada igra završi, i prikazuje rezultate.
+
+Brojanje X i O: Funkcija broji koliko puta se pojavljuju 'X' i 'O' u listi occupied_triangles, 
+koja predstavlja zauzete trouglove na tabli.
+
+Određivanje pobednika:
+
+Ako 'X' ima više zauzetih trouglova, proglašava ga za pobednika i ispisuje rezultat.
+Ako 'O' ima više zauzetih trouglova, proglašava ga za pobednika i ispisuje rezultat.
+Ako su oba igrača na istom broju, proglašava se nerešeno.
+
+3. links_for_move
+Ova funkcija generiše listu tuple-ova koje predstavljaju tacke koje su sada povezane na osnovu poteza.
+
+Ulazni parametri:
+
+letter: Slovo reda (npr. 'A').
+number: Broj kolone.
+direction: Pravac poteza (može biti "D", "DD" ili "DL").
+size: Veličina table.
+Izlaz: Lista tuple-ova koji predstavljaju linkove između pozicija na osnovu pravca poteza
+
+
+4. end_check
+
+Funkcija prvo proverava da li je broj zauzetih trouglova dostigao maksimalni broj za određenu veličinu table (6 * veličina²).
+Zatim, proverava da li je broj zauzetih trouglova za 'X' ili 'O' prešao maksimalnu dozvoljenu vrednost (3 * veličina²).
+Ako je bilo koji od ovih uslova ispunjen, igra se završava.
+
+
+5. makeBoard
+Ova funkcija pravi početnu tabelu na osnovu unete veličine.
+
+Ulazni parametar:
+
+size: Veličina table koju korisnik unese.
+Izlaz: Funkcija generiše tablu u obliku liste listi (matrica), gde je svaka lista jedan red na tabli.
+
+Ako je veličina od 4 do 8, generiše se odgovarajući broj redova i kolona.
+Ako je veličina van ovog opsega, funkcija ispisuje poruku o grešci.
