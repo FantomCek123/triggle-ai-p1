@@ -107,11 +107,13 @@ def filter_moves_with_max_x3(moves):
 			max_moves[key] = move
 	return list(max_moves.values())
 
-def triangle_under_column_occupied(triangles , column):
+
+def triangle_under_column_occupied(triangles, column):
 	for triangle in triangles:
 		if triangle[2] == column:
 			return triangle
 	return None
+
 
 def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center, occupied_triangles):
 	to_print = ""  # zbog slova...
@@ -195,7 +197,8 @@ def printDMoves(moves, dot_number, row, shift):
 	return
 
 
-def printBoard(board, size, moves, occupied_triangles):
+def printBoard(board, moves=[], occupied_triangles=[]):
+	size = len(board[0])
 	center = size - 1
 	for i, cells in enumerate(board):
 		if i < center:
@@ -232,14 +235,31 @@ def makeBoard(size: int):
 		print('Losa velicina tabele! - postavi velicinu od 4 do 8!')
 		return
 
-if __name__ == "__main__":
-	board_size = input("Unesite velicinu table (od 4 do 8):")
 
-	tabla = makeBoard(int(board_size))
+def end_check(occupied_triangles, board_size):
+	if len(occupied_triangles) == 6 * board_size ** 2:
+		return True
 
-	moves = []
-	old_moves = []
-	prepared_moves = [['a', 2 ,'dl', 3], ['a', 2 ,'dd', 3], ['b', 1 ,'d',3], ['a', 3 ,'dl', 3], ['a', 3 ,'dd', 3] ]
+	max_count = 3 * board_size ** 2
+
+	count_x = 0
+	count_o = 0
+
+	for element in occupied_triangles:
+		if element[0] == 'X':
+			count_x += 1
+		elif element[0] == 'O':
+			count_o += 1
+
+	if count_x > max_count or count_o > max_count:
+		return True
+
+	return False
+
+
+def arbitrary_state(board_size):
+	tabla = makeBoard(board_size)
+	prepared_moves = [['a', 2, 'dl', 3], ['a', 2, 'dd', 3], ['b', 1, 'd', 3], ['a', 3, 'dl', 3], ['a', 3, 'dd', 3]]
 	# Ovaj niz (matrica, trebalo bi da je set najbolje ali neka za pocetak) odnosi se na zauzete trouglove.
 	# Uzima vrednost koju ce iscrta, vrstu i kolonu - tj. vrsta sa tacke "iscrtava" x i o ispod nje zato sto se x i o nalaze tacno ispod tacaka
 	# a u fju za iscrtavanje veza poravnjavamo se po tacke iznad te vrste - mnogo logicno. Zato je ovako najlakse da se iscrtaju tacke
@@ -248,14 +268,92 @@ if __name__ == "__main__":
 	# Ostalo je da se realizuju ove fje pomenute i ona sto racuna broj trouglica na osnovu velicine table, i mozda jos nesto ne secam se.
 	# Mozda optimizovati crtanje ali nema potrebe realno mali nizovi, brzo pici, jedino ako se neko iskurci bas...
 	# ps. - napraviti lepsi primer neki ovo ono...
-	occupied_triangles = [['x', 0, 1], ['o', 0, 2]] # <-
-	printBoard(tabla, int(board_size), prepared_moves, occupied_triangles)
-	printBoard(tabla, int(board_size), moves, [])
+	occupied_triangles = [['x', 0, 1], ['o', 0, 2]]  # <-
+	printBoard(tabla, prepared_moves, occupied_triangles)
+	print()
 
-	size = int(board_size) # za sad, refaktorisati kasnije
+
+def initial_state(board_size):
+	board = makeBoard(board_size)
+	return board, [], [], [], []  # tabla moves old_moves occupied_triangles links
+
+
+def links_for_move(letter, number, direction, size):
+	if direction == "D":
+		lista = [(letter, number + i) for i in range(0, 4)]
+		return [(lista[i], lista[i + 1]) for i in range(3)]
+
+	elif direction == "DD":
+		lista = [(chr(ord(letter) + i), number + i) for i in range(0, 4)]
+		return [(lista[i], lista[i + 1]) for i in range(3)]
+
+	elif direction == "DL":
+		half_char = ord('A') + size
+		lista = []
+		broj = 0
+
+		while ord(letter) + 1 < half_char:
+			lista.append(((letter, number), (chr(ord(letter) + 1), number)))
+			broj += 1
+			letter = chr(ord(letter) + 1)
+			if broj == 3:
+				return lista
+
+		for i in range(3 - broj):
+			lista.append(((letter, number - i),(chr(ord(letter) + 1), number - i - 1)))
+			letter = chr(ord(letter) + 1)
+
+		return lista
+
+
+def end_game_screen(occupied_triangles):
+	count_x = 0
+	count_o = 0
+
+	for element in occupied_triangles:
+		if element[0] == 'x':
+			count_x += 1
+		elif element[0] == 'o':
+			count_o += 1
+
+	if count_x > count_o:
+		print(f"X IGRAC JE POBEDIO SA {count_x} BODOVA!!\n\nO igrac  je osvojio {count_o} bodova")
+	if count_x < count_o:
+		print(f"O IGRAC JE POBEDIO SA {count_o} BODOVA!!\n\nX igrac  je osvojio {count_x} bodova")
+	if count_x == count_o:
+		print(f"NERESENO")
+
+
+def make_a_move():
+	return input("Unesite podatke (format: red(A, B, ...) kolona(1, 2, ...) potez(DD,D,DL)): ")
+
+
+def start_game():
+
+	char_board_size = None
+	while True:
+		char_board_size = input("Unesite velicinu table (od 4 do 8):")
+		if (not char_board_size.isdigit()) or int(char_board_size) < 4 or int(char_board_size) > 8:
+			continue
+		break
+
+	while True:
+		user_input = input("Ko igra prvi (x ili o): ")
+		if user_input.upper() == "X" or user_input.upper() == "O":
+			break
+		os.system('cls' if os.name == 'nt' else 'clear')
+
+	os.system('cls' if os.name == 'nt' else 'clear')
+
+	board_size = int(char_board_size)
+	tabla, moves, old_moves, occupied_triangles, links = initial_state(board_size)
+
+	printBoard(tabla)
+	arbitrary_state(board_size)
+
 	while True:
 		moves = copy.deepcopy(old_moves)
-		user_input = input("Unesite podatke (format: red(A, B, ...) kolona(1, 2, ...) potez(DD,D,DL)): ")
+		user_input = make_a_move()
 
 		parts = user_input.split()
 
@@ -265,7 +363,32 @@ if __name__ == "__main__":
 			move[1] = int(move[1])
 			move.append(to_draw)
 			moves.append(move)
+			links.extend(links_for_move(move[0].upper(), move[1], move[2].upper(), board_size))
 
 			old_moves = copy.deepcopy(moves)
 			os.system('cls' if os.name == 'nt' else 'clear')
-			printBoard(tabla, int(board_size), moves, [])
+			printBoard(tabla, moves, occupied_triangles)
+
+			# OVO JE ZA TEST SAMO
+			print()
+			for el in links:
+				print(el)
+			print()
+
+			if end_check(occupied_triangles, board_size):
+				print("Kraj igre!")
+				end_game_screen(occupied_triangles)
+				break
+
+
+if __name__ == "__main__":
+	while True:
+		start_game()
+
+		while True:
+			user_input = input("Nova partija? [Yes/No]\n")
+			if user_input.upper() == "YES":
+				break
+			if user_input.upper() == "NO":
+				print("Hvala na igranju!")
+				exit()
