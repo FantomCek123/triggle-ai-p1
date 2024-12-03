@@ -1,3 +1,7 @@
+-- Rad sa aplikacijom --
+Pri pokretanju možete odigravati poteze i videti kako se "gumice" iscrtavaju i lako se proverava validnost poteza na ovaj način.
+Ukoliko želite proizvoljno stanje sa popunjenim trouglovima (x i o) otkomentarisati f-ju arbitrary_state.
+
 1. start_game
 Ova funkcija je odgovorna za pokretanje i upravljanje celokupnom igrom.
 

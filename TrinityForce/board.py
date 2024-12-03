@@ -36,9 +36,6 @@ def validateMove(move, board, moves):
 		print("Ovaj potez je vec odigran!")
 		return False
 
-	# moze se malo refaktorisati da bude bolje i citljivije, kod granicnih slucajeva pogotovo i da izadje odma kad
-	# nadje da nije validan al me jako mrzi, ipak su u pitanju 4 iteracije...
-
 	if direction == "DD":
 		valid = True
 		for i in range(3):
@@ -110,10 +107,11 @@ def filter_moves_with_max_x3(moves):
 
 
 def triangle_under_column_occupied(triangles, column):
+	triangles_n = []
 	for triangle in triangles:
 		if triangle[2] == column:
-			return triangle
-	return None
+			triangles_n.append(triangle)
+	return triangles_n
 
 
 def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center, occupied_triangles):
@@ -129,13 +127,18 @@ def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center, occupied
 				new = f" {tab * (shift + 1 + 2 * (move[1] - 1))}"
 				if move[1] > 1: new += f"{(move[1] - 1) * " "}"
 				to_print = to_print + new[len(to_print):]
-			if triangle_under_column_occupied(occupied_triangles, move[1] - 1) is None:
+			t = triangle_under_column_occupied(occupied_triangles, move[1] - 1)
+			if len(t) == 0:
 				to_print += half_tab + '\\'
-			else:
+			elif len(t) == 1:
 				to_print += " " + '\\'
+			else:
+				to_print += " " + '\\' + half_tab
+				element = next((tr for tr in t if tr[3] is True), None)
+				to_print += element[0]
 			move[3] -= 1
 			if move[3] == 0:
-				flagged.append(index)  # dd_dl_moves.pop(index)
+				flagged.append(index)
 			else:
 				if row < center:
 					dd_dl_moves[index] = [chr(row + 1 + 65), move[1] + 1, move[2], move[3]]
@@ -151,13 +154,15 @@ def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center, occupied
 				if move[1] > 1: new += f"{(move[1] - 1) * " "}"
 				to_print = to_print + new[len(to_print):]
 			to_print += half_tab + '/'
-			x_or_o = triangle_under_column_occupied(occupied_triangles, move[1] - 1)
-			if x_or_o is not None:
-				to_print += ' ' + x_or_o[0]
+			x_or_o_arr = triangle_under_column_occupied(occupied_triangles, move[1] - 1)
+			for x_or_o in x_or_o_arr:
+				if x_or_o is not None:
+					if not x_or_o[3]:
+						to_print += ' ' + x_or_o[0]
 
 			move[3] -= 1
 			if move[3] == 0:
-				flagged.append(index)  # dd_dl_moves.pop(index) #ovde ga sjebe dal zbog enumerate bem li ga
+				flagged.append(index)  # dd_dl_moves.pop(index)
 			else:
 				if row >= center:
 					dd_dl_moves[index] = [chr(row + 1 + 65), move[1] - 1, move[2], move[3]]
@@ -181,7 +186,7 @@ def printDMoves(moves, dot_number, row, shift):
 			if move[1] == dot + 1 and index not in flagged:
 				new = beg + shift * tab + dot * 2 * tab
 				if move[1] > 1: new += f"{(move[1] - 1) * " "}"
-				new += "." + d_bond
+				new += "*" + d_bond
 				to_print = to_print + new[len(to_print):]
 				move[3] -= 1
 				move[1] += 1
@@ -190,7 +195,7 @@ def printDMoves(moves, dot_number, row, shift):
 			else:
 				new = beg + shift * tab + dot * 2 * tab
 				if dot > 0: new += f"{dot * " "}"
-				new += "." + 2 * tab
+				new += "*" + 2 * tab
 				to_print = to_print + new[len(to_print):]
 
 		moves = deleteDuplicates(moves)
@@ -219,7 +224,8 @@ def printBoard(board, moves=[], occupied_triangles=[]):
 		remaining_moves = [item for item in moves if item not in dd_dl_for_row]
 		dd_dl_for_row.sort(key=lambda x: (x[1], 0 if x[2].upper() == "DL" else 1))
 		triangles_for_row = [sublist for sublist in occupied_triangles if sublist[1] == i]
-		moves = printDLAndDDMovesAndUpdateMoveList(dd_dl_for_row, i, shift, center, triangles_for_row) + remaining_moves
+		moves = printDLAndDDMovesAndUpdateMoveList(dd_dl_for_row, i, shift, center, triangles_for_row)
+		moves += remaining_moves
 
 
 def makeBoard(size: int):
@@ -227,10 +233,10 @@ def makeBoard(size: int):
 		board = []
 		center = size * 2 - 1
 		for i in range(size):
-			board.append(["."] * (size + i))
+			board.append(["*"] * (size + i))
 
 		for i in range(1, size):
-			board.append(["."] * (center - i))
+			board.append(["*"] * (center - i))
 		return board
 	else:
 		print('Losa velicina tabele! - postavi velicinu od 4 do 8!')
@@ -260,16 +266,18 @@ def end_check(occupied_triangles, board_size):
 
 def arbitrary_state(board_size):
 	tabla = makeBoard(board_size)
-	prepared_moves = [['a', 2, 'dl', 3], ['a', 2, 'dd', 3], ['b', 1, 'd', 3], ['a', 3, 'dl', 3], ['a', 3, 'dd', 3]]
+	prepared_moves = [['a', 1, 'd', 3] ,['a', 2, 'dl', 3], ['a', 2, 'dd', 3], ['b', 1, 'd', 3], ['a', 3, 'dl', 3], ['a', 3, 'dd', 3], ['c', 1, 'd', 3]]
 	# Ovaj niz (matrica, trebalo bi da je set najbolje ali neka za pocetak) odnosi se na zauzete trouglove.
 	# Uzima vrednost koju ce iscrta, vrstu i kolonu - tj. vrsta sa tacke "iscrtava" x i o ispod nje zato sto se x i o nalaze tacno ispod tacaka
-	# a u fju za iscrtavanje veza poravnjavamo se po tacke iznad te vrste - mnogo logicno. Zato je ovako najlakse da se iscrtaju tacke
-	# Za ovaj niz trouglova treba da se napravi fja koja gleda koga ima vise i ko je pobednik.
+	# a u fju za iscrtavanje veza poravnjavamo se po tacke iznad te vrste. Zato je ovako najlakse da se iscrtaju tacke
 	# Za prvu fazu generisemo niz X i O staticki, a kasnije ce da generisemo ovaj set dinamicki kroz poteze.
-	# Ostalo je da se realizuju ove fje pomenute i ona sto racuna broj trouglica na osnovu velicine table, i mozda jos nesto ne secam se.
-	# Mozda optimizovati crtanje ali nema potrebe realno mali nizovi, brzo pici, jedino ako se neko iskurci bas...
-	# ps. - napraviti lepsi primer neki ovo ono...
-	occupied_triangles = [['x', 0, 1], ['o', 0, 2]]  # <-
+
+	# Posto postoji ovakav niz poteza, ima i ovaj parametar TRUE ili FALSE na kraju.
+	# Svaka tacka zaduzena za x ili o ispod nje, ali i pored nje, da bi se pokrili svi trouglovi.
+	# Zato treba voditi racuna pri prosledjivanju ovih parametara, pogotovo kod redova ispod polovine.
+	# Da se npr. ne iscrta x/o ispod prve tacke srednjeg reda. Kada se dinamicki generisu trouglici, u 2. fazi
+	# bice implementirano da ne moze da se desi.
+	occupied_triangles = [['x', 0, 1, False], ['x', 0, 2, False], ['o', 0, 1, True], ['x', 1, 2, False]]  # <-
 	printBoard(tabla, prepared_moves, occupied_triangles)
 	print()
 
@@ -352,13 +360,16 @@ def start_game():
 	printBoard(tabla)
 
 	#UKLJUCITE OVU LINIJU ZA PROIZVOLJNO STANJE
-	#arbitrary_state(board_size)
+	arbitrary_state(board_size)
 
 	while True:
 		moves = copy.deepcopy(old_moves)
 		user_input = make_a_move()
 
 		parts = user_input.split()
+		if len(parts) != 3:
+			print("Nije dobar format!")
+			continue
 
 		move = [parts[0], parts[1], parts[2]]
 		if validateMove(move, tabla, moves):
