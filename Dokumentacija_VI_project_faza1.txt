@@ -1,6 +1,6 @@
 -- Rad sa aplikacijom --
 Pri pokretanju možete odigravati poteze i videti kako se "gumice" iscrtavaju i lako se proverava validnost poteza na ovaj način.
-Ukoliko želite proizvoljno stanje sa popunjenim trouglovima (x i o) otkomentarisati f-ju arbitrary_state.
+Takodje, prikazace se proizvoljno stanje koje se moze iskljuciti komentarisanjem f-je arbitrary_state.
 
 1. start_game
 Ova funkcija je odgovorna za pokretanje i upravljanje celokupnom igrom.
@@ -62,3 +62,37 @@ Izlaz: Funkcija generiše tablu u obliku liste listi (matrica), gde je svaka lis
 
 Ako je veličina od 4 do 8, generiše se odgovarajući broj redova i kolona.
 Ako je veličina van ovog opsega, funkcija ispisuje poruku o grešci.
+
+-- Funkcije za iscrtavanje table --
+
+Crtanje krece kroz printBoard funkciju. Potezi D (desno) crtaju se kroz printDMoves, a DL i DD f-jom printDLAndDDMovesAndUpdateMoveList.
+
+printDMoves - prenose se potezi za red, broj tacaka u redu, red, i shift za taj red (za poravnjanje tj. broj tabova = 4 blanko znaka) i svaka tacka se poravnjava
+sa beg + shift * tab + dot * 2 * tab, a i sami potezi krecu od tacke za koju su definisani.
+Svaki potez ima dodatatni (cetvrti) parametar, koji je na pocetku 3 (jer je gumica duzine 3 - tj. povezuje 4 tacke) i dekrementira se svakom iteracijom.
+Drugi parametar u potezu je kolona od koje krece iscrtavanje koji se takodje menja kroz ovu fju tako sto se inkrementira kroz iteracije.
+Npr. potez nakon prve iteracije postaje:(b 1 d 3) --> (b 2 d 2). Ukoliko postoji i potez (b 1 d 3), nakon prve iteracije treba ukoloniti potez (b 2 d 2) jer je kraci,
+iako se gumice preklapaju donekle, iscrtace se samo duza. Za ovo uklanjanje poteza sluzi fja deleteDuplicates.
+
+printDLAndDDMovesAndUpdateMoveList - funkcionise slicno kao prethodna funkcija, malo slozenija ali slican princip. Dodatni parametri su:
+centar (indeks sredisnjeg (najduzeg) niza table) i zauzeti trouglovi koje treba iscrtati.
+Kada se crtaju ovi potezi za odredjeni red, npr: nakon prvog reda tacaka idu potezi za taj red tj. potezi koji krecu od reda A.
+U zavisnosti gde smo pozicionirani od centralnog reda nakon icrtavanja poteza, npr. ako je u pitanju potez DD:
+
+				if row < center:
+					dd_dl_moves[index] = [chr(row + 1 + 65), move[1] + 1, move[2], move[3]]
+				else:
+					dd_dl_moves[index] = [chr(row + 1 + 65), move[1], move[2], move[3]]
+
+                prenosi se potez i za sledeci red (B), i ako smo iznad centra krecemo od kolone -> kolona_za_a + 1.
+                Slicno vazi i za poteze DL.
+                Parametar move[3] se dekrementira i onda se brisu "visak potezi" isto kao i kod printDMoves, samo funkcijomfilter_moves_with_max_x3.
+
+Takodje, potezi su sortirani u fji printBoard po koloni od koje krecu i sekundarni sort DD pa DL da bi se lepo iscrtali.
+ -> dd_dl_for_row.sort(key=lambda x: (x[1], 0 if x[2].upper() == "DL" else 1))
+Konacno, ako ispod neke tacke postoji x ili o, iscrtace se - ovo je objasnjeno kroz komentare u arbitrary_state funkciji.
+Nakon zavrsetka f-je vraca se novogenerisani niz poteza koji ce sada sadrzati poteze za sledeci red jer ih treba nastaviti (3 gumice, 4 tacke).
+Nadam se da je kolko-tolko citljivo ovo objasnjenje :D.
+
+
+

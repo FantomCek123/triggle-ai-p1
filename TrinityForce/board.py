@@ -81,7 +81,7 @@ def validateMove(move, board, moves):
 
 
 def deleteDuplicates(moves):
-	# prepraviti
+	# optimizovati
 	grouped = {}
 	for move in moves:
 		key = move[1]
@@ -122,10 +122,10 @@ def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center, occupied
 		if move[2].upper() == "DD":
 			if index == 0:
 				to_print += f" {tab * (shift + 1 + 2 * (move[1] - 1))}"  # jedan space je namerno zbog slova...
-				if move[1] > 1: to_print += f"{(move[1] - 1) * " "}"
+				if move[1] > 1: to_print += f"{(move[1] - 1) * ' ' }"
 			else:
 				new = f" {tab * (shift + 1 + 2 * (move[1] - 1))}"
-				if move[1] > 1: new += f"{(move[1] - 1) * " "}"
+				if move[1] > 1: new += f"{(move[1] - 1) * ' '}"
 				to_print = to_print + new[len(to_print):]
 			t = triangle_under_column_occupied(occupied_triangles, move[1] - 1)
 			if len(t) == 0:
@@ -148,10 +148,10 @@ def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center, occupied
 		elif move[2].upper() == "DL":
 			if index == 0:
 				to_print += f" {tab * (shift + 2 * (move[1] - 1))}"  # jedan space je namerno zbog slova...
-				if move[1] > 1: to_print += f"{(move[1] - 1) * " "}"
+				if move[1] > 1: to_print += f"{(move[1] - 1) * ' '}"
 			else:
 				new = f" {tab * (shift + 2 * (move[1] - 1))}"
-				if move[1] > 1: new += f"{(move[1] - 1) * " "}"
+				if move[1] > 1: new += f"{(move[1] - 1) * ' '}"
 				to_print = to_print + new[len(to_print):]
 			to_print += half_tab + '/'
 			x_or_o_arr = triangle_under_column_occupied(occupied_triangles, move[1] - 1)
@@ -185,7 +185,7 @@ def printDMoves(moves, dot_number, row, shift):
 		for index, move in enumerate(moves):
 			if move[1] == dot + 1 and index not in flagged:
 				new = beg + shift * tab + dot * 2 * tab
-				if move[1] > 1: new += f"{(move[1] - 1) * " "}"
+				if move[1] > 1: new += f"{(move[1] - 1) * ' '}"
 				new += "*" + d_bond
 				to_print = to_print + new[len(to_print):]
 				move[3] -= 1
@@ -194,7 +194,7 @@ def printDMoves(moves, dot_number, row, shift):
 					flagged.append(index)
 			else:
 				new = beg + shift * tab + dot * 2 * tab
-				if dot > 0: new += f"{dot * " "}"
+				if dot > 0: new += f"{dot * ' '}"
 				new += "*" + 2 * tab
 				to_print = to_print + new[len(to_print):]
 
@@ -202,7 +202,7 @@ def printDMoves(moves, dot_number, row, shift):
 	print(to_print)
 	return
 
-
+# F-JE ZA ISCRTAVANJE SU OBJASNJENE NA KRAJU DOKUMENTACIJE !!!
 def printBoard(board, moves=[], occupied_triangles=[]):
 	size = len(board[0])
 	center = size - 1
@@ -225,6 +225,8 @@ def printBoard(board, moves=[], occupied_triangles=[]):
 		dd_dl_for_row.sort(key=lambda x: (x[1], 0 if x[2].upper() == "DL" else 1))
 		triangles_for_row = [sublist for sublist in occupied_triangles if sublist[1] == i]
 		moves = printDLAndDDMovesAndUpdateMoveList(dd_dl_for_row, i, shift, center, triangles_for_row)
+
+		# sada printDLAndDDMovesAndUpdateMoveList vrati nove poteze za sledeci red i na njih se konkatenisu na remaining_moves...
 		moves += remaining_moves
 
 
@@ -266,7 +268,9 @@ def end_check(occupied_triangles, board_size):
 
 def arbitrary_state(board_size):
 	tabla = makeBoard(board_size)
-	prepared_moves = [['a', 1, 'd', 3] ,['a', 2, 'dl', 3], ['a', 2, 'dd', 3], ['b', 1, 'd', 3], ['a', 3, 'dl', 3], ['a', 3, 'dd', 3], ['c', 1, 'd', 3]]
+	prepared_moves = [['a', 1, 'd', 3] ,['a', 2, 'dl', 3], ['a', 2, 'dd', 3], ['b', 1, 'd', 3],
+					  ['a', 3, 'dl', 3], ['a', 3, 'dd', 3], ['c', 1, 'd', 3],
+					  ['d', 4, 'dd', 3], ['d', 4, 'dl', 3],['e', 2, 'd', 3] ]
 	# Ovaj niz (matrica, trebalo bi da je set najbolje ali neka za pocetak) odnosi se na zauzete trouglove.
 	# Uzima vrednost koju ce iscrta, vrstu i kolonu - tj. vrsta sa tacke "iscrtava" x i o ispod nje zato sto se x i o nalaze tacno ispod tacaka
 	# a u fju za iscrtavanje veza poravnjavamo se po tacke iznad te vrste. Zato je ovako najlakse da se iscrtaju tacke
@@ -277,7 +281,10 @@ def arbitrary_state(board_size):
 	# Zato treba voditi racuna pri prosledjivanju ovih parametara, pogotovo kod redova ispod polovine.
 	# Da se npr. ne iscrta x/o ispod prve tacke srednjeg reda. Kada se dinamicki generisu trouglici, u 2. fazi
 	# bice implementirano da ne moze da se desi.
-	occupied_triangles = [['x', 0, 1, False], ['x', 0, 2, False], ['o', 0, 1, True], ['x', 1, 2, False]]  # <-
+
+	# za razliku od poteza ovde se bas prenose indexi reda i kolone tacke ispod koje treba iscrtati x/o
+	# odlucicemo se za 1 nacin u buducnosti...
+	occupied_triangles = [['x', 0, 1, False], ['x', 0, 2, False], ['o', 0, 1, True], ['x', 1, 2, False],['o', 3, 3, False] ]  # <-
 	printBoard(tabla, prepared_moves, occupied_triangles)
 	print()
 
