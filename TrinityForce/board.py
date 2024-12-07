@@ -122,7 +122,7 @@ def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center, occupied
 		if move[2].upper() == "DD":
 			if index == 0:
 				to_print += f" {tab * (shift + 1 + 2 * (move[1] - 1))}"  # jedan space je namerno zbog slova...
-				if move[1] > 1: to_print += f"{(move[1] - 1) * ' ' }"
+				if move[1] > 1: to_print += f"{(move[1] - 1) * ' '}"
 			else:
 				new = f" {tab * (shift + 1 + 2 * (move[1] - 1))}"
 				if move[1] > 1: new += f"{(move[1] - 1) * ' '}"
@@ -132,6 +132,9 @@ def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center, occupied
 				to_print += half_tab + '\\'
 			elif len(t) == 1:
 				to_print += " " + '\\'
+				# edge case !!! !!!
+				if t[0][3]:
+					to_print += half_tab + t[0][0]
 			else:
 				to_print += " " + '\\' + half_tab
 				element = next((tr for tr in t if tr[3] is True), None)
@@ -202,6 +205,7 @@ def printDMoves(moves, dot_number, row, shift):
 	print(to_print)
 	return
 
+
 # F-JE ZA ISCRTAVANJE SU OBJASNJENE NA KRAJU DOKUMENTACIJE !!!
 def printBoard(board, moves=[], occupied_triangles=[]):
 	size = len(board[0])
@@ -249,15 +253,15 @@ def end_check(occupied_triangles, board_size):
 	if len(occupied_triangles) == 6 * board_size ** 2:
 		return True
 
-	max_count = 3 * board_size ** 2
+	max_count = 3 * (board_size - 1) ** 2
 
 	count_x = 0
 	count_o = 0
 
 	for element in occupied_triangles:
-		if element[0] == 'X':
+		if element[0] == 'x':
 			count_x += 1
-		elif element[0] == 'O':
+		elif element[0] == 'o':
 			count_o += 1
 
 	if count_x > max_count or count_o > max_count:
@@ -269,9 +273,8 @@ def end_check(occupied_triangles, board_size):
 def arbitrary_state(board_size):
 	tabla = makeBoard(board_size)
 
-	prepared_moves = [['a', 1, 'd', 3] ,['a', 2, 'dl', 3], ['a', 2, 'dd', 3], ['b', 1, 'd', 3],
-					  ['a', 3, 'dl', 3], ['a', 3, 'dd', 3], ['c', 1, 'd', 3],
-					  ['d', 4, 'dd', 3], ['d', 4, 'dl', 3],['e', 2, 'd', 3] ]
+	prepared_moves = [['d', 2, 'dd', 3], ['d', 4, 'dl', 3], ['e', 1, 'd', 3],
+	                  ['c', 2, 'dd', 3], ['c', 3, 'dl', 3], ['f', 2, 'd', 3], ['f', 1, 'd', 3]]
 	# Ovaj niz (matrica, trebalo bi da je set najbolje ali neka za pocetak) odnosi se na zauzete trouglove.
 	# Uzima vrednost koju ce iscrta, vrstu i kolonu - tj. vrsta sa tacke "iscrtava" x i o ispod nje zato sto se x i o nalaze tacno ispod tacaka
 	# a u fju za iscrtavanje veza poravnjavamo se po tacke iznad te vrste. Zato je ovako najlakse da se iscrtaju tacke
@@ -285,7 +288,7 @@ def arbitrary_state(board_size):
 
 	# za razliku od poteza ovde se bas prenose indexi reda i kolone tacke ispod koje treba iscrtati x/o
 	# odlucicemo se za 1 nacin u buducnosti...
-	occupied_triangles = [['x', 0, 1, False], ['x', 0, 2, False], ['o', 0, 1, True], ['x', 1, 2, False],['o', 3, 3, False] ]  # <-
+	occupied_triangles = [['x', 4, 1, True], ['x', 3, 2, False], ['x', 4, 2, False], ['x', 4, 1, False]]
 	printBoard(tabla, prepared_moves, occupied_triangles)
 	print()
 
@@ -307,12 +310,12 @@ def links_for_move(letter, number, direction, size):
 		while ord(letter) + 1 < half_char:
 			lista.append(((letter, number), (chr(ord(letter) + 1), number + 1)))
 			broj += 1
-			number+=1
+			number += 1
 			letter = chr(ord(letter) + 1)
-			if broj == 3:
+			if broj == 4:
 				return lista
 
-		for i in range(3 - broj):
+		for i in range(4 - broj):
 			lista.append(((letter, number), (chr(ord(letter) + 1), number)))
 			letter = chr(ord(letter) + 1)
 
@@ -361,37 +364,76 @@ def give_coordinates_and_direction():
 	return input("Unesite podatke (format: red(A, B, ...) kolona(1, 2, ...) potez(DD,D,DL)): ")
 
 
-def check_for_triangles(links_to_check, all_links, direction, occupied_triangles: list, board_size):
+def check_for_triangles(links_to_check, all_links, direction, occupied_triangles: list, board_size, players_turn):
 	for link in links_to_check:
 		if direction == "D":
-			triangles = check_triangles_for_d_link(link, all_links, board_size)
+			triangles = check_triangles_for_d_link(link, all_links, board_size, players_turn)
 			if triangles:
+				for el in triangles:
+					print(el)
 				occupied_triangles.extend(triangles)
 
-		# if direction == "DD":
-		# 	triangles = check_triangles_for_d_link(link, all_links, board_size)
-		# 	if triangles:
-		# 		occupied_triangles.extend(triangles)
+		if direction == "DD":
+			triangles = check_triangles_for_dd_link(link, all_links, board_size, players_turn)
+			if triangles:
+				for el in triangles:
+					print(el)
+				occupied_triangles.extend(triangles)
+
+		if direction == "DL":
+			triangles = check_triangles_for_dl_link(link, all_links, board_size, players_turn)
+			if triangles:
+				for el in triangles:
+					print(el)
+				occupied_triangles.extend(triangles)
 
 
 # ((A,3),(B,4))
-def check_triangles_for_dd_link(ddLink, all_links, board_size):
+def check_triangles_for_dd_link(ddLink, all_links, board_size, players_turn):
 	to_return = []
 
-	if ord(ddLink[0][0]) - ord("A") + board_size < ddLink[0][1]:
+	if ord(ddLink[0][0]) - ord("A") + board_size != ddLink[0][1]:
 		char = ddLink[0][0]
-		number = ddLink[1][1]
+		number = ddLink[0][1] + 1
 		if (char, number) in all_links[ddLink[0]] and (char, number) in all_links[ddLink[1]]:
-			to_return.append(['x', ord(ddLink[0][0]) - ord("A"), (ddLink[0][1] - 1) * 2,
-			                  True])  # TREBA -1 ZA TRECI PARAMETAR, ALI POSTO MORA SA TRUE FALSE NEMA GA
+			to_return.append(['o' if players_turn else 'x', ord(ddLink[0][0]) - ord("A"), ddLink[0][1] - 1,
+			                  True])
 
-	if ord(ddLink[0][0]) - ord("A") >= board_size - 1 and ddLink[0][1] == 1:
+	if ord(ddLink[0][0]) - ord("A") < board_size - 1 or ddLink[0][1] != 1:
 		char = ddLink[1][0]
 		number = ddLink[1][1] - 1
+		if (char, number) in all_links[ddLink[0]] and (char, number) in all_links[ddLink[1]]:
+			to_return.append(['o' if players_turn else 'x', ord(ddLink[0][0]) - ord("A"), ddLink[0][1] - 1,
+			                  False])  # TREBA -1 ZA TRECI PARAMETAR, ALI POSTO MORA SA TRUE FALSE NEMA GA
+	return to_return
+
+
+# ((A,3),(B,4))
+def check_triangles_for_dl_link(dlLink, all_links, board_size, players_turn):
+	to_return = []
+
+	if ord(dlLink[0][0]) - ord("A") >= board_size or dlLink[0][1] != 1:
+		char = dlLink[0][0]
+		number = dlLink[0][1] - 1
+		if (char, number) in all_links[dlLink[0]] and (char, number) in all_links[dlLink[1]]:
+			to_return.append(['o' if players_turn else 'x', ord(dlLink[0][0]) - ord("A"), dlLink[0][1] - 2,
+			                  True])  # TREBA -1 ZA TRECI PARAMETAR, ALI POSTO MORA SA TRUE FALSE NEMA GA
+
+	middle_char = chr(ord('A') + board_size - 1)
+
+	if ord(dlLink[0][0]) - ord("A") < board_size - 1 or dlLink[0][1] != board_size * 2 - 1 - (
+			ord(dlLink[0][0]) - ord(middle_char)):
+		char = dlLink[1][0]
+		number = dlLink[1][1] + 1
+		if (char, number) in all_links[dlLink[0]] and (char, number) in all_links[dlLink[1]]:
+			to_return.append(['o' if players_turn else 'x', ord(dlLink[0][0]) - ord("A"), dlLink[0][1] - 1,
+			                  False])  # TREBA -1 ZA TRECI PARAMETAR, ALI POSTO MORA SA TRUE FALSE NEMA GA
+
+	return to_return
 
 
 # ((B,1),(B,2))
-def check_triangles_for_d_link(dLink, all_links, board_size):
+def check_triangles_for_d_link(dLink, all_links, board_size, players_turn):
 	to_return = []
 
 	if dLink[0][0] != "A":
@@ -399,25 +441,25 @@ def check_triangles_for_d_link(dLink, all_links, board_size):
 		if ord(dLink[0][0]) - ord("A") < board_size:
 			number = dLink[0][1]
 			if (char, number) in all_links[dLink[0]] and (char, number) in all_links[dLink[1]]:
-				to_return.append(["x", ord(char) - ord('A'), (dLink[0][1] - 1) * 2, False])
+				to_return.append(['o' if players_turn else 'x', ord(char) - ord('A'), dLink[0][1] - 1, False])
 		else:
 			number = dLink[1][1]
 			if (char, number) in all_links[dLink[0]] and (char, number) in all_links[dLink[1]]:
-				to_return.append(["x", ord(char) - ord('A'), dLink[0][1] * 2 - 1, False])
+				to_return.append(['o' if players_turn else 'x', ord(char) - ord('A'), dLink[0][1], False])
 
 	last_char = chr(ord("A") + board_size * 2 - 2)
 	if dLink[0][0] != last_char:
 		char = chr(ord(dLink[0][0]) + 1)
-		if ord(dLink[0][0]) - ord("A") < board_size:
+		if ord(dLink[0][0]) - ord("A") < board_size - 1:
 			number = dLink[1][1]
 			if (char, number) in all_links[dLink[0]] and (char, number) in all_links[dLink[1]]:
-				to_return.append(["x", ord(char) - ord('A') - 1, dLink[0][1] * 2 - 1,
-				                  False])  # TREBA TRUE I -1 ZA TRECI PARAMETAR, ALI OVO JE SAMO DA BIH MOGO DA TESTIRAM!
+				to_return.append(['o' if players_turn else 'x', ord(char) - ord('A') - 1, dLink[0][1] - 1,
+				                  True])
 		else:
 			number = dLink[0][1]
 			if (char, number) in all_links[dLink[0]] and (char, number) in all_links[dLink[1]]:
-				to_return.append(["x", ord(char) - ord('A') - 1, (dLink[0][1] - 1) * 2,
-				                  True])  # OVO TREBA POPRAVITI, NECE AKO JE D1,E1,F1,G1!!!!
+				to_return.append(['o' if players_turn else 'x', ord(char) - ord('A') - 1, dLink[0][1] - 1,
+				                  True])
 
 	return to_return
 
@@ -430,17 +472,19 @@ def start_game():
 	# 		print("Dimenzija nije korektna!")
 	# 	else:
 	# 		break
+	players_turn = False
+	while True:
+		user_input = input("Ko igra prvi (x ili o): ")
+		if user_input.upper() == "O":
+			players_turn = True
+			break
+		if user_input.upper() == "X":
+			break
+		os.system('cls' if os.name == 'nt' else 'clear')
 
-	# while True:
-	# 	user_input = input("Ko igra prvi (x ili o): ")
-	# 	if user_input.upper() == "X" or user_input.upper() == "O":
-	# 		# OVDE DOPUNITI
-	# 		break
-	# 	os.system('cls' if os.name == 'nt' else 'clear')
-	#
-	# os.system('cls' if os.name == 'nt' else 'clear')
+	os.system('cls' if os.name == 'nt' else 'clear')
 
-	#board_size = int(char_board_size)
+	# board_size = int(char_board_size)
 	board_size = int(4)
 
 	tabla, moves, old_moves, occupied_triangles, links = initial_state(board_size)
@@ -451,7 +495,9 @@ def start_game():
 	# arbitrary_state(board_size)
 
 	while True:
-		moves = copy.deepcopy(old_moves)
+		# moves = copy.deepcopy(old_moves)
+		# ovde je bilo jer niz nije bio prazan na pocetku... prebaceno dole
+
 		user_input = give_coordinates_and_direction()
 
 		parts = user_input.split()
@@ -472,22 +518,27 @@ def start_game():
 				links[link[0]].append(link[1])
 				links[link[1]].append(link[0])
 
-			check_for_triangles(lista, links, move[2].upper(), occupied_triangles, board_size)
+			check_for_triangles(lista, links, move[2].upper(), occupied_triangles, board_size, players_turn)
 
-			# links.extend(links_for_move(move[0].upper(), move[1], move[2].upper(), board_size))
+			unique_list = []
+			seen = set()
+
+			for item in occupied_triangles:
+				# Uzimamo tuple drugog, trećeg i četvrtog elementa kao ključ
+				key = (item[1], item[2], item[3])
+				if key not in seen:
+					unique_list.append(item)
+					seen.add(key)
+
+			occupied_triangles = copy.deepcopy(unique_list)
 
 			old_moves = copy.deepcopy(moves)
 			os.system('cls' if os.name == 'nt' else 'clear')
 			printBoard(tabla, moves, occupied_triangles)
 
-			for el in occupied_triangles:
-				print(el)
+			moves = copy.deepcopy(old_moves)
 
-			# OVO JE ZA TEST SAMO
-			# print()
-			# for el in links:
-			#	print(el)
-			# print()
+			players_turn = not players_turn
 
 			if end_check(occupied_triangles, board_size):
 				print("Kraj igre!")
