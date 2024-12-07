@@ -309,10 +309,10 @@ def links_for_move(letter, number, direction, size):
 			broj += 1
 			number+=1
 			letter = chr(ord(letter) + 1)
-			if broj == 3:
+			if broj == 4:
 				return lista
 
-		for i in range(3 - broj):
+		for i in range(4 - broj):
 			lista.append(((letter, number), (chr(ord(letter) + 1), number)))
 			letter = chr(ord(letter) + 1)
 
@@ -399,25 +399,25 @@ def check_triangles_for_d_link(dLink, all_links, board_size):
 		if ord(dLink[0][0]) - ord("A") < board_size:
 			number = dLink[0][1]
 			if (char, number) in all_links[dLink[0]] and (char, number) in all_links[dLink[1]]:
-				to_return.append(["x", ord(char) - ord('A'), (dLink[0][1] - 1) * 2, False])
+				to_return.append(["x", ord(char) - ord('A'), dLink[0][1] - 1, False])
 		else:
 			number = dLink[1][1]
 			if (char, number) in all_links[dLink[0]] and (char, number) in all_links[dLink[1]]:
-				to_return.append(["x", ord(char) - ord('A'), dLink[0][1] * 2 - 1, False])
+				to_return.append(["x", ord(char) - ord('A'), dLink[0][1], False])
 
 	last_char = chr(ord("A") + board_size * 2 - 2)
 	if dLink[0][0] != last_char:
 		char = chr(ord(dLink[0][0]) + 1)
-		if ord(dLink[0][0]) - ord("A") < board_size:
+		if ord(dLink[0][0]) - ord("A") < board_size - 1:
 			number = dLink[1][1]
 			if (char, number) in all_links[dLink[0]] and (char, number) in all_links[dLink[1]]:
-				to_return.append(["x", ord(char) - ord('A') - 1, dLink[0][1] * 2 - 1,
-				                  False])  # TREBA TRUE I -1 ZA TRECI PARAMETAR, ALI OVO JE SAMO DA BIH MOGO DA TESTIRAM!
+				to_return.append(["x", ord(char) - ord('A') - 1, dLink[0][1] - 1,
+				                  True])
 		else:
 			number = dLink[0][1]
 			if (char, number) in all_links[dLink[0]] and (char, number) in all_links[dLink[1]]:
-				to_return.append(["x", ord(char) - ord('A') - 1, (dLink[0][1] - 1) * 2,
-				                  True])  # OVO TREBA POPRAVITI, NECE AKO JE D1,E1,F1,G1!!!!
+				to_return.append(["x", ord(char) - ord('A') - 1, dLink[0][1] - 1,
+				                  True])
 
 	return to_return
 
