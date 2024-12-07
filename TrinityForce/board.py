@@ -132,6 +132,9 @@ def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center, occupied
 				to_print += half_tab + '\\'
 			elif len(t) == 1:
 				to_print += " " + '\\'
+				# edge case !!! !!!
+				if move[1] == 1 and t[0][3] == True:
+					to_print += half_tab + t[0][0]
 			else:
 				to_print += " " + '\\' + half_tab
 				element = next((tr for tr in t if tr[3] is True), None)
@@ -270,7 +273,8 @@ def arbitrary_state(board_size):
 	tabla = makeBoard(board_size)
 	prepared_moves = [['a', 1, 'd', 3] ,['a', 2, 'dl', 3], ['a', 2, 'dd', 3], ['b', 1, 'd', 3],
 					  ['a', 3, 'dl', 3], ['a', 3, 'dd', 3], ['c', 1, 'd', 3],
-					  ['d', 4, 'dd', 3], ['d', 4, 'dl', 3],['e', 2, 'd', 3] ]
+					  ['d', 4, 'dd', 3], ['d', 4, 'dl', 3],['e', 2, 'd', 3], ['b', 2, 'dl', 3],
+					  ['d', 1, 'dd', 3], ['d', 1, 'd', 3],['d', 2, 'dd', 3], ['c', 3, 'dl', 3], ['e', 1, 'd', 3]]
 	# Ovaj niz (matrica, trebalo bi da je set najbolje ali neka za pocetak) odnosi se na zauzete trouglove.
 	# Uzima vrednost koju ce iscrta, vrstu i kolonu - tj. vrsta sa tacke "iscrtava" x i o ispod nje zato sto se x i o nalaze tacno ispod tacaka
 	# a u fju za iscrtavanje veza poravnjavamo se po tacke iznad te vrste. Zato je ovako najlakse da se iscrtaju tacke
@@ -284,7 +288,7 @@ def arbitrary_state(board_size):
 
 	# za razliku od poteza ovde se bas prenose indexi reda i kolone tacke ispod koje treba iscrtati x/o
 	# odlucicemo se za 1 nacin u buducnosti...
-	occupied_triangles = [['x', 0, 1, False], ['x', 0, 2, False], ['o', 0, 1, True], ['x', 1, 2, False],['o', 3, 3, False] ]  # <-
+	occupied_triangles = [['x', 0, 1, False], ['x', 0, 2, False], ['x', 1, 2, False],['o', 3, 1, False], ['o', 3, 0, True], ['o', 3, 1, True], ['x', 4, 0, True ] ]  # <-
 	printBoard(tabla, prepared_moves, occupied_triangles)
 	print()
 
@@ -370,7 +374,8 @@ def start_game():
 	arbitrary_state(board_size)
 
 	while True:
-		moves = copy.deepcopy(old_moves)
+		# moves = copy.deepcopy(old_moves)
+		# ovde je bilo jer niz nije bio prazan na pocetku... prebaceno dole
 		user_input = make_a_move()
 
 		parts = user_input.split()
@@ -389,6 +394,8 @@ def start_game():
 			old_moves = copy.deepcopy(moves)
 			os.system('cls' if os.name == 'nt' else 'clear')
 			printBoard(tabla, moves, occupied_triangles)
+
+			moves = copy.deepcopy(old_moves)
 
 			# OVO JE ZA TEST SAMO
 			#print()
