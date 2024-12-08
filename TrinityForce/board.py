@@ -75,6 +75,7 @@ def validateMove(move, board, moves):
 			return True
 		else:
 			print(f"Potez {direction} nije validan.")
+			return False
 	else:
 		print(f"Potez {direction} nije validan.")
 		return False
@@ -273,8 +274,8 @@ def end_check(occupied_triangles, board_size):
 def arbitrary_state(board_size):
 	tabla = makeBoard(board_size)
 
-	prepared_moves = [['d', 2, 'dd', 3], ['d', 4, 'dl', 3], ['e', 1, 'd', 3],
-	                  ['c', 2, 'dd', 3], ['c', 3, 'dl', 3], ['f', 2, 'd', 3], ['f', 1, 'd', 3]]
+	prepared_moves = [['D', 2, 'DD', 3], ['D', 4, 'DL', 3], ['E', 1, 'D', 3],
+	                  ['C', 2, 'DD', 3], ['C', 3, 'DL', 3], ['F', 2, 'D', 3], ['F', 1, 'D', 3]]
 	# Ovaj niz (matrica, trebalo bi da je set najbolje ali neka za pocetak) odnosi se na zauzete trouglove.
 	# Uzima vrednost koju ce iscrta, vrstu i kolonu - tj. vrsta sa tacke "iscrtava" x i o ispod nje zato sto se x i o nalaze tacno ispod tacaka
 	# a u fju za iscrtavanje veza poravnjavamo se po tacke iznad te vrste. Zato je ovako najlakse da se iscrtaju tacke
@@ -464,14 +465,82 @@ def check_triangles_for_d_link(dLink, all_links, board_size, players_turn):
 	return to_return
 
 
+def isMoveLeagal(move, board, moves):
+	center_row = size - 1
+	row_char, column, direction = move
+	row = ord(row_char.upper()) - 65
+	column = column - 1
+
+	direction = direction.upper()
+
+	if row >= len(board) or column >= len(board[row]):
+		return False
+
+	appanded_move = copy.deepcopy(move)
+	appanded_move.append(3)
+
+	if appanded_move in moves:
+		return False
+
+	if direction == "DD":
+		valid = True
+		for i in range(3):
+			if row + i >= center_row:
+				if row + i + 1 >= len(board) or len(board[row + i + 1]) <= column:
+					valid = False
+			else:
+				if column + 1 >= len(board[row + i + 1]):
+					valid = False
+				column += 1
+		if valid:
+			return True
+		else:
+			return False
+
+	elif direction == "DL":
+		valid = True
+		for i in range(4):
+			if row + i <= center_row:
+				continue
+			else:
+				if column - 1 < 0:
+					valid = False
+				column -= 1
+		if valid:
+			return True
+		else:
+			return False
+
+	elif direction == "D":
+		if column + 3 < len(board[row]):
+			return True
+		else:
+			return False
+	else:
+		return False
+
+
+def new_states(table, moves):
+	all_moves = []
+	for i in range(len(table)):
+		for j in range(len(table[i])):
+			for direction in ['D', 'DD', 'DL']:
+				letther = chr(ord('A') + i)
+				number = j + 1
+				move = [letther, number, direction]
+				if isMoveLeagal(move, table, moves):
+					all_moves.append(move)
+	return all_moves
+
+
 def start_game():
 	char_board_size = None
-	# while True:
-	# 	char_board_size = input("Unesite velicinu table (od 4 do 8):")
-	# 	if (not char_board_size.isdigit()) or int(char_board_size) < 4 or int(char_board_size) > 8:
-	# 		print("Dimenzija nije korektna!")
-	# 	else:
-	# 		break
+	while True:
+		char_board_size = input("Unesite velicinu table (od 4 do 8):")
+		if (not char_board_size.isdigit()) or int(char_board_size) < 4 or int(char_board_size) > 8:
+			print("Dimenzija nije korektna!")
+		else:
+			break
 	players_turn = False
 	while True:
 		user_input = input("Ko igra prvi (x ili o): ")
@@ -484,12 +553,11 @@ def start_game():
 
 	os.system('cls' if os.name == 'nt' else 'clear')
 
-	# board_size = int(char_board_size)
-	board_size = int(4)
+	board_size = int(char_board_size)
 
-	tabla, moves, old_moves, occupied_triangles, links = initial_state(board_size)
+	table, moves, old_moves, occupied_triangles, links = initial_state(board_size)
 
-	printBoard(tabla)
+	printBoard(table)
 
 	# UKLJUCITE OVU LINIJU ZA PROIZVOLJNO STANJE
 	# arbitrary_state(board_size)
@@ -505,12 +573,19 @@ def start_game():
 			print("Nije dobar format!")
 			continue
 
-		move = [parts[0], parts[1], parts[2]]
-		if validateMove(move, tabla, moves):
+		move = [parts[0].upper(), parts[1], parts[2].upper()]
+		if validateMove(move, table, moves):
 			to_draw = 3
 			move[1] = int(move[1])
+
+
+
 			move.append(to_draw)
 			moves.append(move)
+
+			all_moves = new_states(table,moves)
+
+
 
 			lista = links_for_move(move[0].upper(), move[1], move[2].upper(), board_size)
 
@@ -534,7 +609,11 @@ def start_game():
 
 			old_moves = copy.deepcopy(moves)
 			os.system('cls' if os.name == 'nt' else 'clear')
-			printBoard(tabla, moves, occupied_triangles)
+			printBoard(table, moves, occupied_triangles)
+
+
+			for el in all_moves:
+				print(el)
 
 			moves = copy.deepcopy(old_moves)
 
