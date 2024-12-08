@@ -133,7 +133,7 @@ def printDLAndDDMovesAndUpdateMoveList(dd_dl_moves, row, shift, center, occupied
 			elif len(t) == 1:
 				to_print += " " + '\\'
 				# edge case !!! !!!
-				if move[1] == 1 and t[0][3] == True:
+				if t[0][3]:
 					to_print += half_tab + t[0][0]
 			else:
 				to_print += " " + '\\' + half_tab
@@ -273,10 +273,12 @@ def end_check(occupied_triangles, board_size):
 def arbitrary_state(board_size):
 	tabla = makeBoard(board_size)
 
-	prepared_moves = [['a', 1, 'd', 3], ['a', 2, 'dl', 3], ['a', 2, 'dd', 3], ['b', 1, 'd', 3],
-	                  ['a', 3, 'dl', 3], ['a', 3, 'dd', 3], ['c', 1, 'd', 3],
-	                  ['d', 4, 'dd', 3], ['d', 4, 'dl', 3], ['e', 2, 'd', 3], ['b', 2, 'dl', 3],
-	                  ['d', 1, 'dd', 3], ['d', 1, 'd', 3], ['d', 2, 'dd', 3], ['c', 3, 'dl', 3], ['e', 1, 'd', 3]]
+	# prepared_moves = [['a', 1, 'd', 3], ['a', 2, 'dl', 3], ['a', 2, 'dd', 3], ['b', 1, 'd', 3],
+	#                   ['a', 3, 'dl', 3], ['a', 3, 'dd', 3], ['c', 1, 'd', 3],
+	#                   ['d', 4, 'dd', 3], ['d', 4, 'dl', 3], ['e', 2, 'd', 3], ['b', 2, 'dl', 3],
+	#                   ['d', 1, 'dd', 3], ['d', 1, 'd', 3], ['d', 2, 'dd', 3], ['c', 3, 'dl', 3], ['e', 1, 'd', 3]]
+	prepared_moves = [['d', 2, 'dd', 3], ['d', 4, 'dl', 3],  ['e', 1, 'd', 3],
+					  ['c', 2, 'dd', 3],  ['c', 3, 'dl', 3],  ['f', 2, 'd', 3],  ['f', 1, 'd', 3]]
 	# Ovaj niz (matrica, trebalo bi da je set najbolje ali neka za pocetak) odnosi se na zauzete trouglove.
 	# Uzima vrednost koju ce iscrta, vrstu i kolonu - tj. vrsta sa tacke "iscrtava" x i o ispod nje zato sto se x i o nalaze tacno ispod tacaka
 	# a u fju za iscrtavanje veza poravnjavamo se po tacke iznad te vrste. Zato je ovako najlakse da se iscrtaju tacke
@@ -290,8 +292,9 @@ def arbitrary_state(board_size):
 
 	# za razliku od poteza ovde se bas prenose indexi reda i kolone tacke ispod koje treba iscrtati x/o
 	# odlucicemo se za 1 nacin u buducnosti...
-	occupied_triangles = [['x', 0, 1, False], ['x', 0, 2, False], ['x', 1, 2, False], ['o', 3, 1, False],
-	                      ['o', 3, 0, True], ['o', 3, 1, True], ['x', 4, 0, True]]  # <-
+	# occupied_triangles = [['x', 0, 1, False], ['x', 0, 2, False], ['x', 1, 2, False], ['o', 3, 1, False],
+	#                       ['o', 3, 0, True], ['o', 3, 1, True], ['x', 4, 0, True]]  # <-
+	occupied_triangles = [['x', 4, 1, True], ['x', 3, 2, False],['x', 4, 2, False],  ['x', 4, 1, False],]
 	printBoard(tabla, prepared_moves, occupied_triangles)
 	print()
 
@@ -490,7 +493,7 @@ def start_game():
 	printBoard(tabla)
 
 	# UKLJUCITE OVU LINIJU ZA PROIZVOLJNO STANJE
-	# arbitrary_state(board_size)
+	arbitrary_state(board_size)
 
 	while True:
 		# moves = copy.deepcopy(old_moves)
