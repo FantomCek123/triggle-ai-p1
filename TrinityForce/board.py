@@ -579,17 +579,10 @@ def start_game():
 
 		move = [parts[0].upper(), parts[1], parts[2].upper()]
 		if validateMove(move, table, moves):
-			to_draw = 3
 			move[1] = int(move[1])
 
-
-
-			move.append(to_draw)
+			move.append(3)
 			moves.append(move)
-
-			all_moves = new_states(table,moves)
-
-
 
 			lista = links_for_move(move[0].upper(), move[1], move[2].upper(), board_size)
 

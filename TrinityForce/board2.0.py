@@ -625,6 +625,17 @@ def minmax(table, moves, my_move, occupied_triangles, links, board_size, depth=1
 def remove_move(move, moves, occupied_triangles, board_size):
 	remove_link(moves, [move, 3])
 
+	list_of_links = links_for_move(move[0], move[1],move[2], board_size)
+
+	links_for_triangls = [give_links_for_triangl(triangle,board_size) for triangle in occupied_triangles]
+
+	for link in list_of_links:
+		for i,links_for_triangl in enumerate(links_for_triangls):
+			if link in links_for_triangl:
+				## AKO JE occupied_triangles set OVO NECE DA RADI!!
+				occupied_triangles.remove(occupied_triangles[i])
+
+
 
 def remove_link(moves, move):
 	if move in moves:
@@ -637,10 +648,32 @@ def remove_link(moves, move):
 
 # ['x', 4, 1, True]
 def give_links_for_triangl(occupied_triangl, board_size):
-	letter = chr(occupied_triangl[1] + ord('A'))
+	row = occupied_triangl[1]
 	number = occupied_triangl[2]
+	down = occupied_triangl[3]
 	links = []
 
+	up_letter = chr(row + ord('A'))
+	down_letter = chr(row + ord('A') + 1)
+
+	if row < board_size - 1:
+		if down:
+			return [((up_letter, number + 1), (up_letter, number + 2)),
+					((up_letter, number + 1), (down_letter, number + 2)),
+					((up_letter, number + 2), (down_letter, number + 2))]
+		else:
+			return [((up_letter, number + 1), (down_letter, number + 1)),
+					((up_letter, number + 1), (down_letter, number + 2)),
+					((down_letter, number + 1), (down_letter, number + 2))]
+	else:
+		if down:
+			return [((up_letter, number + 1), (up_letter, number + 2)),
+					((up_letter, number + 1), (down_letter, number + 1)),
+					((up_letter, number + 2), (down_letter, number + 1))]
+		else:
+			return [((up_letter, number + 2), (down_letter, number + 1)),
+					((up_letter, number + 2), (down_letter, number + 2)),
+					((down_letter, number + 1), (down_letter, number + 2))]
 
 #	if occupied_triangl[3]:
 #		for i in range(3):
@@ -671,6 +704,17 @@ def one_player_game(board_size, players_turn):
 			if validateMove(move, table, moves):
 
 				make_a_move(moves, links, occupied_triangles, move, players_turn, board_size)
+
+				# OVO TREBA DA BUDE U MAKE_A_MOVE ALI NECE NESTO...
+				unique_list = []
+				seen = set()
+				for item in occupied_triangles:
+					key = (item[1], item[2], item[3])
+					if key not in seen:
+						unique_list.append(item)
+						seen.add(key)
+				occupied_triangles = copy.deepcopy(unique_list)
+				########################################
 
 				prikazi_tablu(table, moves, occupied_triangles)
 
@@ -708,6 +752,18 @@ def two_player_game(board_size, players_turn):
 
 			make_a_move(moves, links, occupied_triangles, move, players_turn, board_size)
 
+			# OVO TREBA DA BUDE U MAKE_A_MOVE ALI NECE NESTO...
+			unique_list = []
+			seen = set()
+			for item in occupied_triangles:
+				key = (item[1], item[2], item[3])
+				if key not in seen:
+					unique_list.append(item)
+					seen.add(key)
+			occupied_triangles = copy.deepcopy(unique_list)
+			########################################
+
+
 			prikazi_tablu(table, moves, occupied_triangles)
 
 			players_turn = not players_turn
@@ -734,15 +790,17 @@ def make_a_move(moves, links, occupied_triangles, move, players_turn, board_size
 
 	check_for_triangles(lista, links, move[2].upper(), occupied_triangles, board_size, players_turn)
 
-	unique_list = []
-	seen = set()
-
-	for item in occupied_triangles:
-		key = (item[1], item[2], item[3])
-		if key not in seen:
-			unique_list.append(item)
-			seen.add(key)
-	occupied_triangles = copy.deepcopy(unique_list)
+	# OVODE TREBA DA BUDE
+# 	unique_list = []
+# 	seen = set()
+# 	for item in occupied_triangles:
+# 		key = (item[1], item[2], item[3])
+# 		if key not in seen:
+# 			unique_list.append(item)
+# 			seen.add(key)
+# 	occupied_triangles = copy.deepcopy(unique_list)
+	# ALI NECE NESTO...
+	########################################
 
 
 def start_game():
