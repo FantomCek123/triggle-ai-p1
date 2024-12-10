@@ -7,6 +7,8 @@ tab = '    '
 half_tab = '  '
 d_bond = '--------'
 
+illegal_moves = set()
+
 
 def validate_move(move, board, moves):
 	if len(move) != 3:
@@ -83,17 +85,28 @@ def validate_move(move, board, moves):
 
 def delete_duplicates(moves):
 	# optimizovati
+	# grouped = {}
+	# for move in moves:
+	# 	key = move[1]
+	# 	if key not in grouped:
+	# 		grouped[key] = []
+	# 	grouped[key].append(move)
+	#
+	# result = []
+	# for group in grouped.values():
+	# 	max_move = max(group, key=lambda x: x[3])
+	# 	result.append(max_move)
 	grouped = {}
-	for move in moves:
+	for index, move in enumerate(moves):
+		if move is None:
+			continue
 		key = move[1]
-		if key not in grouped:
-			grouped[key] = []
-		grouped[key].append(move)
+		if key not in grouped or grouped[key][1][3] < move[3]:
+			grouped[key] = (index, move)
 
-	result = []
-	for group in grouped.values():
-		max_move = max(group, key=lambda x: x[3])
-		result.append(max_move)
+	result = [None] * len(moves)
+	for index, move in grouped.values():
+		result[index] = move
 	return result
 
 
@@ -132,15 +145,20 @@ def print_dl_and_dd_moves_and_update_move_list(dd_dl_moves, row, shift, center, 
 			if len(t) == 0:
 				to_print += half_tab + '\\'
 			elif len(t) == 1:
+				# to_print += " "
+				# if t[0][3]:
+				# 	to_print += " "
+				# 	to_print += "\\"
+				# 	to_print += half_tab + t[0][0]
+				# else:
+				# 	to_print += "\\"
 				to_print += " "
 				if t[0][3]:
 					to_print += " "
-					to_print += "\\"
-					to_print += half_tab + t[0][0]
-				else:
-					to_print += "\\"
+				to_print += "\\"
 				# edge case !!! !!!
-				# if t[0][3]:
+				if t[0][3]:
+					to_print += half_tab + t[0][0]
 			else:
 				to_print += " " + '\\' + half_tab
 				element = next((tr for tr in t if tr[3] is True), None)
@@ -200,6 +218,8 @@ def print_d_moves(moves, dot_number, row, shift):
 	# f"{chr(i + 65)}{tab}" + f"{tab}" * shift + f"{2 * tab}"
 	for dot in range(dot_number):
 		for index, move in enumerate(moves):
+			if move is None:
+				continue
 			if move[1] == dot + 1 and index not in flagged:
 				new = beg + shift * tab + dot * 2 * tab
 				if move[1] > 1: new += f"{(move[1] - 1) * ' '}"
@@ -289,8 +309,7 @@ def arbitrary_state(board_size):
 
 	# prepared_moves = [['D', 2, 'DD', 3], ['D', 4, 'DL', 3], ['E', 1, 'D', 3],
 	#                   ['C', 2, 'DD', 3], ['C', 3, 'DL', 3], ['F', 2, 'D', 3], ['F', 1, 'D', 3]]
-	prepared_moves = [['A', 1, 'DL', 3],['B', 2, 'DL', 3],['B', 2, 'DD', 3],['B', 3, 'DL', 3],
-					  ['B', 3, 'DD', 3],['B', 4, 'DL', 3],['B', 4, 'DD', 3],['B', 5, 'DL', 3],['B', 1, 'DD', 3],]
+	prepared_moves = [['D', 1, 'D', 3],['D', 4, 'D', 3],]
 
 	# Ovaj niz (matrica, trebalo bi da je set najbolje ali neka za pocetak) odnosi se na zauzete trouglove.
 	# Uzima vrednost koju ce iscrta, vrstu i kolonu - tj. vrsta sa tacke "iscrtava" x i o ispod nje zato sto se x i o nalaze tacno ispod tacaka
@@ -486,6 +505,7 @@ def check_triangles_for_d_link(dLink, all_links, board_size, players_turn):
 
 
 def is_move_legal(move, board, moves):
+	global illegal_moves
 	center_row = size - 1
 	row_char, column, direction = move
 	row = ord(row_char.upper()) - 65
@@ -494,12 +514,14 @@ def is_move_legal(move, board, moves):
 	direction = direction.upper()
 
 	if row >= len(board) or column >= len(board[row]):
+		illegal_moves.add((move[0], move[1], move[2]))
 		return False
 
-	appanded_move = copy.deepcopy(move)
-	appanded_move.append(3)
+	appended_move = copy.deepcopy(move)
+	appended_move.append(3)
 
-	if appanded_move in moves:
+	if appended_move in moves:
+		illegal_moves.add((appended_move[0], appended_move[1], appended_move[2]))
 		return False
 
 	if direction == "DD":
@@ -507,9 +529,11 @@ def is_move_legal(move, board, moves):
 		for i in range(3):
 			if row + i >= center_row:
 				if row + i + 1 >= len(board) or len(board[row + i + 1]) <= column:
+					illegal_moves.add((move[0], move[1], move[2]))
 					valid = False
 			else:
 				if column + 1 >= len(board[row + i + 1]):
+					illegal_moves.add((move[0], move[1], move[2]))
 					valid = False
 				column += 1
 		if valid:
@@ -524,6 +548,7 @@ def is_move_legal(move, board, moves):
 				continue
 			else:
 				if column - 1 < 0:
+					illegal_moves.add((move[0], move[1], move[2]))
 					valid = False
 				column -= 1
 		if valid:
@@ -535,6 +560,7 @@ def is_move_legal(move, board, moves):
 		if column + 3 < len(board[row]):
 			return True
 		else:
+			illegal_moves.add((move[0], move[1], move[2]))
 			return False
 	else:
 		return False
@@ -548,13 +574,16 @@ def new_states(table, moves):
 				letter = chr(ord('A') + i)
 				number = j + 1
 				move = [letter, number, direction]
-				if is_move_legal(move, table, moves):
-					all_moves.append(move)
+				move_t = (letter, number, direction)
+				if move_t not in illegal_moves:
+					if is_move_legal(move, table, moves):
+						all_moves.append(move)
 	return all_moves
 
 
 def start_game():
 	char_board_size = None
+	global illegal_moves
 	while True:
 		char_board_size = input("Unesite velicinu table (od 4 do 8):")
 		if (not char_board_size.isdigit()) or int(char_board_size) < 4 or int(char_board_size) > 8:
@@ -630,6 +659,9 @@ def start_game():
 			old_moves = copy.deepcopy(moves)
 			os.system('cls' if os.name == 'nt' else 'clear')
 			print_board(table, moves, occupied_triangles)
+
+			for key in sorted(illegal_moves, key = lambda x: x[0]):
+				print(key)
 
 
 			# for el in all_moves:
