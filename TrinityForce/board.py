@@ -83,8 +83,8 @@ def minimax(current_position, depth, max_depth ,max_, played_moves,    links, oc
 				maximum = val
 				if depth == max_depth:
 					next_move = move
-			if depth == max_depth:
-				return maximum, next_move
+		if depth == max_depth:
+			return maximum, next_move
 		return maximum
 	else:
 		minimum = float('inf')
@@ -724,7 +724,7 @@ def start_game(play_bot: bool = True):
 			parts = user_input.split()
 		elif play_bot:
 			# find_next_move(current_position, depth, max_, played_moves, links, occupied_triangles, board_size, players_turn):
-			move_val, gen_move = find_next_move(current_position, 4,4, True, played, links, occupied_triangles, board_size, players_turn)
+			move_val, gen_move = find_next_move(current_position, 3,3, True, played, links, occupied_triangles, board_size, players_turn)
 			current_position.remove(gen_move)
 			parts = gen_move
 			parts = list(parts)
