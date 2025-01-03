@@ -2,14 +2,107 @@ import copy
 import os
 from collections import defaultdict
 
-size = 4
+size = 6
 tab = '    '
 half_tab = '  '
 d_bond = '--------'
 
 illegal_moves = set()
+played_moves = set()
+# all_possible_moves = set() # videcu...
 
+def vuxni_nazovi_je(occupied_triangles):
+	unique_list = []
+	seen = set()
 
+	# IZDVOJITI U POSEBNU FJU!
+	for item in occupied_triangles:
+		# Uzimamo tuple drugog, trećeg i četvrtog elementa kao ključ
+		key = (item[1], item[2], item[3])
+		if key not in seen:
+			unique_list.append(item)
+			seen.add(key)
+
+	# occupied_triangles = copy.deepcopy(unique_list)
+	return unique_list
+
+def generate_possible_moves(board, played_moves_arr = []): # prenosimo vec generisanu tablu sa "*" jer je laksa za loopovnje
+	possible_moves = set()
+	for i, row in enumerate(board):
+		for j, column in enumerate(row):
+			for direction in ("DL","D", "DD"):
+				move = [chr(i + 65), j + 1, direction]
+				move_t = (chr(i + 65), j + 1, direction)
+				if is_move_legal(move, board,played_moves_arr):
+					possible_moves.add(move_t)
+	return possible_moves
+
+def eval_fun_for_position(played_moves, links, occupied_triangles, board_size, players_turn):
+	# mozda moze optimalnije da se uradi, mrzelo me da citam sve fje kako rade isk...
+	occupied_triangles_c = copy.deepcopy(occupied_triangles)
+	links_c = copy.deepcopy(links)
+	for move in played_moves:
+		lista = links_for_move(move[0].upper(), (move[1]), move[2].upper(), board_size)
+
+		for link in lista:
+			links_c[link[0]].append(link[1])
+			links_c[link[1]].append(link[0])
+
+		check_for_triangles(lista, links_c, move[2].upper(), occupied_triangles_c, board_size, players_turn)
+
+		unique_list = vuxni_nazovi_je(occupied_triangles_c)  # ove 2 linije menjaju ovo dole
+		occupied_triangles_c = copy.deepcopy(unique_list)
+		x = 0
+		o = 0
+
+		# pocetna heuristika, kolko trouglica su zatvoreni...
+		# bot igra al cini mi se da treba bude pametniji malo bem ga...
+		# za sad je bot x tj. uvek igra max
+		for triangle in occupied_triangles_c:
+			if triangle[0] == 'x': x += 1
+			else: o += 1
+		return x - o
+
+# proxy_fja
+def find_next_move(current_position, depth, max_depth, max_, played_moves, links, occupied_triangles, board_size, players_turn):
+	return minimax(current_position, depth, max_depth, max_, played_moves, links, occupied_triangles, board_size, players_turn)
+
+# current_position -> moguci potezi
+def minimax(current_position, depth, max_depth ,max_, played_moves,    links, occupied_triangles, board_size, players_turn):
+	if depth == 0:
+		return eval_fun_for_position(played_moves, links, occupied_triangles, board_size, players_turn)
+	if max_:
+		maximum = float('-inf')
+		for move in current_position:
+			new_position = set(current_position)
+			new_position.remove(move)
+			new_moves = played_moves.copy()
+			new_moves.append(move)
+			val = minimax(new_position, depth - 1, max_depth, not max_, new_moves, links, occupied_triangles, board_size, players_turn)
+			if val > maximum:
+				maximum = val
+				if depth == max_depth:
+					next_move = move
+			if depth == max_depth:
+				return maximum, next_move
+		return maximum
+	else:
+		minimum = float('inf')
+		for move in current_position:
+			new_position = set(current_position)
+			new_position.remove(move)
+			new_moves = played_moves.copy()
+			new_moves.append(move)
+			val = minimax(new_position, depth - 1, max_depth, not max_, new_moves, links, occupied_triangles, board_size, players_turn)
+			if val < minimum:
+				minimum = val
+				if depth == max_depth:
+					next_move = move
+		if depth == max_depth:
+			return minimum, next_move
+		return minimum
+
+####################
 def validate_move(move, board, moves):
 	if len(move) != 3:
 		print("Nevalidan potez: Nepotpun unos!")
@@ -57,11 +150,11 @@ def validate_move(move, board, moves):
 
 	elif direction == "DL":
 		valid = True
-		for i in range(4):
-			if row + i <= center_row:
+		for i in range(1, 4):
+			if row + i <= center_row:  # izvinjavam se za ovakav kod...f
 				continue
 			else:
-				if column - 1 < 0:
+				if column - 1 < 0 or row + i == len(board):
 					valid = False
 				column -= 1
 		if valid:
@@ -279,7 +372,7 @@ def make_board(size: int):
 			board.append(["*"] * (center - i))
 		return board
 	else:
-		print('Losa velicina tabele! - postavi velicinu od 4 do 8!')
+		print('Losa velicina table! - postavi velicinu od 4 do 8!')
 		return
 
 
@@ -543,12 +636,11 @@ def is_move_legal(move, board, moves):
 
 	elif direction == "DL":
 		valid = True
-		for i in range(4):
-			if row + i <= center_row:
+		for i in range(1, 4):
+			if row + i <= center_row:  # izvinjavam se za ovakav kod...f
 				continue
 			else:
-				if column - 1 < 0:
-					illegal_moves.add((move[0], move[1], move[2]))
+				if column - 1 < 0 or row + i == len(board):
 					valid = False
 				column -= 1
 		if valid:
@@ -581,59 +673,79 @@ def new_states(table, moves):
 	return all_moves
 
 
-def start_game():
-	char_board_size = None
+def start_game(play_bot: bool = True):
 	global illegal_moves
+	global size
+	players_turn = False
 	while True:
 		char_board_size = input("Unesite velicinu table (od 4 do 8):")
 		if (not char_board_size.isdigit()) or int(char_board_size) < 4 or int(char_board_size) > 8:
 			print("Dimenzija nije korektna!")
 		else:
 			break
-	players_turn = False
 	while True:
-		user_input = input("Ko igra prvi (x ili o): ")
-		if user_input.upper() == "O":
-			players_turn = True
+		if not play_bot:
+			move_val = input("Ko igra prvi (x ili o): ")
+			if move_val.upper() == "O":
+				players_turn = True
+				break
+			if move_val.upper() == "X":
+				break
+			os.system('cls' if os.name == 'nt' else 'clear')
+		else:
+			print("AJMO!!!")
 			break
-		if user_input.upper() == "X":
-			break
-		os.system('cls' if os.name == 'nt' else 'clear')
 
 	os.system('cls' if os.name == 'nt' else 'clear')
 
 	board_size = int(char_board_size)
+	size = board_size
 
 	table, moves, old_moves, occupied_triangles, links = initial_state(board_size)
 
+	starting_position = generate_possible_moves(table)
+	starting_position = sorted(starting_position, key = lambda x: (x[0], x[1], x[2]))
+	for move in starting_position:
+		print(move)
+	print(len(starting_position))
+
 	print_board(table)
+	current_position = set(starting_position)
 
 	# UKLJUCITE OVU LINIJU ZA PROIZVOLJNO STANJE
-	arbitrary_state(board_size)
-
+	# arbitrary_state(board_size)
+	played = []
 	while True:
 		# moves = copy.deepcopy(old_moves)
 		# ovde je bilo jer niz nije bio prazan na pocetku... prebaceno dole
 
-		user_input = give_coordinates_and_direction()
+		if (play_bot and players_turn) or not play_bot:
+			user_input = give_coordinates_and_direction()
+			parts = user_input.split()
+		elif play_bot:
+			# find_next_move(current_position, depth, max_, played_moves, links, occupied_triangles, board_size, players_turn):
+			move_val, gen_move = find_next_move(current_position, 4,4, True, played, links, occupied_triangles, board_size, players_turn)
+			current_position.remove(gen_move)
+			parts = gen_move
+			parts = list(parts)
+			parts[1] = str(parts[1])
 
-		parts = user_input.split()
 		if len(parts) != 3:
 			print("Nije dobar format!")
 			continue
 
 		move = [parts[0].upper(), parts[1], parts[2].upper()]
+
 		if validate_move(move, table, moves):
+			m = move.copy() #.... puca puca razbija
+			m[1] = int(m[1])
+			played.append(m)
+
 			to_draw = 3
 			move[1] = int(move[1])
 
-
-
 			move.append(to_draw)
 			moves.append(move)
-
-			all_moves = new_states(table,moves)
-
 
 
 			lista = links_for_move(move[0].upper(), move[1], move[2].upper(), board_size)
@@ -644,24 +756,28 @@ def start_game():
 
 			check_for_triangles(lista, links, move[2].upper(), occupied_triangles, board_size, players_turn)
 
-			unique_list = []
-			seen = set()
-
-			for item in occupied_triangles:
-				# Uzimamo tuple drugog, trećeg i četvrtog elementa kao ključ
-				key = (item[1], item[2], item[3])
-				if key not in seen:
-					unique_list.append(item)
-					seen.add(key)
-
+			unique_list = vuxni_nazovi_je(occupied_triangles) # ove 2 linije menjaju ovo dole
 			occupied_triangles = copy.deepcopy(unique_list)
+
+			# unique_list = []
+			# seen = set()
+			#
+			# # IZDVOJITI U POSEBNU FJU!
+			# for item in occupied_triangles:
+			# 	# Uzimamo tuple drugog, trećeg i četvrtog elementa kao ključ
+			# 	key = (item[1], item[2], item[3])
+			# 	if key not in seen:
+			# 		unique_list.append(item)
+			# 		seen.add(key)
+
+			# occupied_triangles = copy.deepcopy(unique_list)
 
 			old_moves = copy.deepcopy(moves)
 			os.system('cls' if os.name == 'nt' else 'clear')
 			print_board(table, moves, occupied_triangles)
 
-			for key in sorted(illegal_moves, key = lambda x: x[0]):
-				print(key)
+			# for key in sorted(illegal_moves, key = lambda x: x[0]):
+			# 	print(key)
 
 
 			# for el in all_moves:
