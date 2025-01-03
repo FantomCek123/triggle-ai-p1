@@ -65,10 +65,10 @@ def eval_fun_for_position(played_moves, links, occupied_triangles, board_size, p
 
 # proxy_fja
 def find_next_move(current_position, depth, max_depth, max_, played_moves, links, occupied_triangles, board_size, players_turn):
-	return minimax(current_position, depth, max_depth, max_, played_moves, links, occupied_triangles, board_size, players_turn)
+	return minimax(current_position, depth, max_depth, max_, played_moves, links, occupied_triangles, board_size, players_turn, float("-inf"), float("inf"))
 
 # current_position -> moguci potezi
-def minimax(current_position, depth, max_depth ,max_, played_moves,    links, occupied_triangles, board_size, players_turn):
+def minimax(current_position, depth, max_depth ,max_, played_moves,    links, occupied_triangles, board_size, players_turn, alpha, beta):
 	if depth == 0:
 		return eval_fun_for_position(played_moves, links, occupied_triangles, board_size, players_turn)
 	if max_:
@@ -78,11 +78,14 @@ def minimax(current_position, depth, max_depth ,max_, played_moves,    links, oc
 			new_position.remove(move)
 			new_moves = played_moves.copy()
 			new_moves.append(move)
-			val = minimax(new_position, depth - 1, max_depth, not max_, new_moves, links, occupied_triangles, board_size, players_turn)
+			val = minimax(new_position, depth - 1, max_depth, not max_, new_moves, links, occupied_triangles, board_size, players_turn, alpha, beta)
 			if val > maximum:
 				maximum = val
 				if depth == max_depth:
 					next_move = move
+			alpha = max(alpha, val)
+			if beta <= alpha:
+				break
 		if depth == max_depth:
 			return maximum, next_move
 		return maximum
@@ -93,11 +96,14 @@ def minimax(current_position, depth, max_depth ,max_, played_moves,    links, oc
 			new_position.remove(move)
 			new_moves = played_moves.copy()
 			new_moves.append(move)
-			val = minimax(new_position, depth - 1, max_depth, not max_, new_moves, links, occupied_triangles, board_size, players_turn)
+			val = minimax(new_position, depth - 1, max_depth, not max_, new_moves, links, occupied_triangles, board_size, players_turn, alpha, beta)
 			if val < minimum:
 				minimum = val
 				if depth == max_depth:
 					next_move = move
+			beta = min(beta, val)
+			if beta <= alpha:
+				break
 		if depth == max_depth:
 			return minimum, next_move
 		return minimum
