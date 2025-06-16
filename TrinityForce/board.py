@@ -116,6 +116,9 @@ def validate_move(move, board, moves):
 
 	center_row = size - 1
 	row_char, column_char, direction = move
+	if(len(row_char) > 1):
+		print("Nevalidan potez: los format")
+		return False
 	row = ord(row_char.upper()) - 65
 	if not column_char.isdigit():
 		print("Nevalidan potez: Kolona mora biti broj!")
@@ -383,7 +386,7 @@ def make_board(size: int):
 
 
 def end_check(occupied_triangles, board_size):
-	if len(occupied_triangles) == 6 * board_size ** 2:
+	if len(occupied_triangles) == 6 * (board_size - 1) ** 2:
 		return True
 
 	max_count = 3 * (board_size - 1) ** 2
@@ -508,22 +511,22 @@ def check_for_triangles(links_to_check, all_links, direction, occupied_triangles
 		if direction == "D":
 			triangles = check_triangles_for_d_link(link, all_links, board_size, players_turn)
 			if triangles:
-				for el in triangles:
-					print(el)
+				#for el in triangles:
+				#print(el)
 				occupied_triangles.extend(triangles)
 
 		if direction == "DD":
 			triangles = check_triangles_for_dd_link(link, all_links, board_size, players_turn)
 			if triangles:
-				for el in triangles:
-					print(el)
+				#for el in triangles:
+				#print(el)
 				occupied_triangles.extend(triangles)
 
 		if direction == "DL":
 			triangles = check_triangles_for_dl_link(link, all_links, board_size, players_turn)
 			if triangles:
-				for el in triangles:
-					print(el)
+				#for el in triangles:
+				#print(el)
 				occupied_triangles.extend(triangles)
 
 
@@ -711,8 +714,8 @@ def start_game(play_bot: bool = True):
 
 	starting_position = generate_possible_moves(table)
 	starting_position = sorted(starting_position, key = lambda x: (x[0], x[1], x[2]))
-	for move in starting_position:
-		print(move)
+	#for move in starting_position:
+	#	print(move)
 	print(len(starting_position))
 
 	print_board(table)
@@ -730,7 +733,7 @@ def start_game(play_bot: bool = True):
 			parts = user_input.split()
 		elif play_bot:
 			# find_next_move(current_position, depth, max_, played_moves, links, occupied_triangles, board_size, players_turn):
-			move_val, gen_move = find_next_move(current_position, 3,3, True, played, links, occupied_triangles, board_size, players_turn)
+			move_val, gen_move = find_next_move(current_position, 5,5, True, played, links, occupied_triangles, board_size, players_turn)
 			current_position.remove(gen_move)
 			parts = gen_move
 			parts = list(parts)

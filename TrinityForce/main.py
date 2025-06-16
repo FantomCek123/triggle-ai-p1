@@ -61,21 +61,21 @@ def draw_scene(selected_grid_size):
 
 
 # Glavna petlja
-#if __name__ == '__main__':
-	#running = True
-	#selected_grid_size = 0
-	#while running:
-	#	for event in pygame.event.get():
-	#		if event.type == pygame.QUIT:
-	#			running = False
-	#		elif event.type == pygame.MOUSEBUTTONDOWN:
-	#			mouse_x, mouse_y = event.pos
-	#			for i, size in enumerate([4, 5, 6, 7, 8]):
-	#				if 50 <= mouse_x <= 250 and 50 + i * 60 <= mouse_y <= 100 + i * 60:
-	#					selected_grid_size = size
-#
-	#	draw_scene(selected_grid_size)
-#
-	# Izlazak iz Pygame-a
-	#pygame.quit()
+if __name__ == '__main__':
+	running = True
+	selected_grid_size = 0
+	while running:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				running = False
+			elif event.type == pygame.MOUSEBUTTONDOWN:
+				mouse_x, mouse_y = event.pos
+				for i, size in enumerate([4, 5, 6, 7, 8]):
+					if 50 <= mouse_x <= 250 and 50 + i * 60 <= mouse_y <= 100 + i * 60:
+						selected_grid_size = size
+
+		draw_scene(selected_grid_size)
+
+	#Izlazak iz Pygame-a
+	pygame.quit()
 
