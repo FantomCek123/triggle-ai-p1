@@ -41,6 +41,8 @@ def eval_fun_for_position(played_moves, links, occupied_triangles, board_size, p
 	# mozda moze optimalnije da se uradi, mrzelo me da citam sve fje kako rade isk...
 	occupied_triangles_c = copy.deepcopy(occupied_triangles)
 	links_c = copy.deepcopy(links)
+	x = 0
+	o = 0
 	for move in played_moves:
 		lista = links_for_move(move[0].upper(), (move[1]), move[2].upper(), board_size)
 
@@ -52,29 +54,25 @@ def eval_fun_for_position(played_moves, links, occupied_triangles, board_size, p
 
 		unique_list = vuxni_nazovi_je(occupied_triangles_c)  # ove 2 linije menjaju ovo dole
 		occupied_triangles_c = copy.deepcopy(unique_list)
-		x = 0
-		o = 0
 
 		# pocetna heuristika, kolko trouglica su zatvoreni...
-		# bot igra al cini mi se da treba bude pametniji malo bem ga...
-		# za sad je bot x tj. uvek igra max
 		for triangle in occupied_triangles_c:
 			if triangle[0] == 'x': x += 1
 			else: o += 1
-		return x - o
+	return x - o
 
 # proxy_fja
 def find_next_move(current_position, depth, max_depth, max_, played_moves, links, occupied_triangles, board_size, players_turn):
 	return minimax(current_position, depth, max_depth, max_, played_moves, links, occupied_triangles, board_size, players_turn, float("-inf"), float("inf"))
 
 # current_position -> moguci potezi
-def minimax(current_position, depth, max_depth ,max_, played_moves,    links, occupied_triangles, board_size, players_turn, alpha, beta):
+def minimax(possible_moves, depth, max_depth, max_, played_moves, links, occupied_triangles, board_size, players_turn, alpha, beta):
 	if depth == 0:
 		return eval_fun_for_position(played_moves, links, occupied_triangles, board_size, players_turn)
 	if max_:
 		maximum = float('-inf')
-		for move in current_position:
-			new_position = set(current_position)
+		for move in possible_moves:
+			new_position = set(possible_moves)
 			new_position.remove(move)
 			new_moves = played_moves.copy()
 			new_moves.append(move)
@@ -91,8 +89,8 @@ def minimax(current_position, depth, max_depth ,max_, played_moves,    links, oc
 		return maximum
 	else:
 		minimum = float('inf')
-		for move in current_position:
-			new_position = set(current_position)
+		for move in possible_moves:
+			new_position = set(possible_moves)
 			new_position.remove(move)
 			new_moves = played_moves.copy()
 			new_moves.append(move)
@@ -682,28 +680,39 @@ def new_states(table, moves):
 	return all_moves
 
 
-def start_game(play_bot: bool = True):
+def start_game(is_bot_playing: bool = True):
 	global illegal_moves
 	global size
 	players_turn = False
+	AI_turn = False
+
+	#VELICINA TABLE
 	while True:
-		char_board_size = input("Unesite velicinu table (od 4 do 8):")
+		char_board_size = input("Unesite velicinu table (od 4 do 8): ")
 		if (not char_board_size.isdigit()) or int(char_board_size) < 4 or int(char_board_size) > 8:
 			print("Dimenzija nije korektna!")
 		else:
 			break
+
+	#SINGLE OR MULTIPLAYER
 	while True:
-		if not play_bot:
-			move_val = input("Ko igra prvi (x ili o): ")
-			if move_val.upper() == "O":
-				players_turn = True
+		char_singl_multy = input("Unesite 1 za singlplayer ili 2 za mutiplayer: ")
+		if (not char_singl_multy.isdigit()) or int(char_singl_multy.isdigit()) != 1 and int(char_singl_multy.isdigit()) != 2:
+			print("Unesite odgovarajuci broj!")
+		else:
+			if int(char_singl_multy) == 2:
+				is_bot_playing = False
+			break
+
+	if int(char_singl_multy) == 1:
+		while True:
+			move_val = input("Ko igra prvi [Ja/AI]: ")
+			if move_val.upper() == "JA":
 				break
-			if move_val.upper() == "X":
+			if move_val.upper() == "AI":
+				AI_turn = True
 				break
 			os.system('cls' if os.name == 'nt' else 'clear')
-		else:
-			print("AJMO!!!")
-			break
 
 	os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -712,32 +721,34 @@ def start_game(play_bot: bool = True):
 
 	table, moves, old_moves, occupied_triangles, links = initial_state(board_size)
 
-	starting_position = generate_possible_moves(table)
-	starting_position = sorted(starting_position, key = lambda x: (x[0], x[1], x[2]))
+	possible_moves = generate_possible_moves(table)
+	possible_moves = sorted(possible_moves, key = lambda x: (x[0], x[1], x[2]))
 	#for move in starting_position:
 	#	print(move)
-	print(len(starting_position))
+	# print(len(starting_position))
 
 	print_board(table)
-	current_position = set(starting_position)
+	current_position = set(possible_moves)
 
 	# UKLJUCITE OVU LINIJU ZA PROIZVOLJNO STANJE
 	# arbitrary_state(board_size)
 	played = []
+
 	while True:
 		# moves = copy.deepcopy(old_moves)
 		# ovde je bilo jer niz nije bio prazan na pocetku... prebaceno dole
 
-		if (play_bot and players_turn) or not play_bot:
-			user_input = give_coordinates_and_direction()
-			parts = user_input.split()
-		elif play_bot:
+
 			# find_next_move(current_position, depth, max_, played_moves, links, occupied_triangles, board_size, players_turn):
-			move_val, gen_move = find_next_move(current_position, 5,5, True, played, links, occupied_triangles, board_size, players_turn)
+		if AI_turn:
+			move_val, gen_move = find_next_move(current_position, 4,4, not players_turn, played, links, occupied_triangles, board_size, players_turn)
 			current_position.remove(gen_move)
 			parts = gen_move
 			parts = list(parts)
 			parts[1] = str(parts[1])
+		else:
+			user_input = give_coordinates_and_direction()
+			parts = user_input.split()
 
 		if len(parts) != 3:
 			print("Nije dobar format!")
@@ -756,8 +767,8 @@ def start_game(play_bot: bool = True):
 			move.append(to_draw)
 			moves.append(move)
 
-
 			lista = links_for_move(move[0].upper(), move[1], move[2].upper(), board_size)
+
 
 			for link in lista:
 				links[link[0]].append(link[1])
@@ -794,6 +805,8 @@ def start_game(play_bot: bool = True):
 
 			moves = copy.deepcopy(old_moves)
 
+			if is_bot_playing:
+				AI_turn = not AI_turn
 			players_turn = not players_turn
 
 			if end_check(occupied_triangles, board_size):
